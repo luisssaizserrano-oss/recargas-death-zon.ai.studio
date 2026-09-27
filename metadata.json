@@ -1,0 +1,6 @@
+{
+  "name": "Recargas Death Zone - Blood Strike",
+  "description": "Plataforma de recargas de Gold, Pases y Paquetes Especiales para Blood Strike con Pago Móvil y WhatsApp",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
