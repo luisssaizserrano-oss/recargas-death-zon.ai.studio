@@ -24,7 +24,7 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
   setReferenceNumber,
   appliedCoupon,
   onToast,
-  stepNumber = 4,
+  stepNumber = 3,
 }) => {
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('pagomovil');
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -113,7 +113,7 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
   };
 
   return (
-    <section id="step-4" className="bg-[#09111f]/90 backdrop-blur-md border border-cyan-500/20 rounded-2xl p-3 sm:p-5 shadow-2xl space-y-3 sm:space-y-4 scroll-mt-20">
+    <section id={`step-${stepNumber}`} className="bg-[#09111f]/90 backdrop-blur-md border border-cyan-500/20 rounded-2xl p-3 sm:p-5 shadow-2xl space-y-3 sm:space-y-4 scroll-mt-20">
       {/* Step Header */}
       <div className="flex items-center gap-2 sm:gap-2.5">
         <span className="flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-cyan-500 text-black font-extrabold font-['Oswald'] text-xs sm:text-sm shadow-md shadow-cyan-500/30 shrink-0">
@@ -123,22 +123,24 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
           <h2 className="font-['Oswald'] text-sm sm:text-lg uppercase tracking-wider text-white">
             Métodos de Pago y Confirmación
           </h2>
-          <p className="text-[11px] sm:text-xs text-slate-400 hidden xs:block">Selecciona tu método de pago y registra tu comprobante</p>
+          <p className="text-[11px] sm:text-xs text-slate-300 hidden xs:block">Selecciona tu método de pago y registra tu comprobante</p>
         </div>
       </div>
 
       {/* Payment Method Selector Tabs */}
-      <div className="grid grid-cols-3 gap-1 sm:gap-1.5 p-1 bg-[#040812] border border-slate-800 rounded-xl">
+      <div className="grid grid-cols-3 gap-1 sm:gap-1.5 p-1 bg-[#040812] border border-slate-700 rounded-xl">
         <button
           type="button"
           onClick={() => {
             setSelectedMethod('pagomovil');
             setReferenceNumber('');
           }}
+          aria-pressed={selectedMethod === 'pagomovil'}
+          aria-label="Pagar con Pago Móvil en Bolívares"
           className={`py-2 px-2 rounded-lg font-['Oswald'] uppercase text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-1.5 ${
             selectedMethod === 'pagomovil'
               ? 'bg-cyan-500 text-black shadow-md shadow-cyan-500/20'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              : 'text-slate-300 hover:text-white hover:bg-slate-800'
           }`}
         >
           <Building2 className="w-4 h-4 shrink-0" />
@@ -151,10 +153,12 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
             setSelectedMethod('binance');
             setReferenceNumber('');
           }}
+          aria-pressed={selectedMethod === 'binance'}
+          aria-label="Pagar con Binance Pay USDT"
           className={`py-2 px-2 rounded-lg font-['Oswald'] uppercase text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-1.5 ${
             selectedMethod === 'binance'
               ? 'bg-amber-400 text-black shadow-md shadow-amber-400/20'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              : 'text-slate-300 hover:text-white hover:bg-slate-800'
           }`}
         >
           <Wallet className="w-4 h-4 shrink-0" />
@@ -167,10 +171,12 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
             setSelectedMethod('paypal');
             setReferenceNumber('');
           }}
+          aria-pressed={selectedMethod === 'paypal'}
+          aria-label="Pagar con PayPal USD"
           className={`py-2 px-2 rounded-lg font-['Oswald'] uppercase text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-1.5 ${
             selectedMethod === 'paypal'
               ? 'bg-blue-500 text-white shadow-md shadow-blue-500/20'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              : 'text-slate-300 hover:text-white hover:bg-slate-800'
           }`}
         >
           <CreditCard className="w-4 h-4 shrink-0" />
@@ -187,18 +193,22 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
             {/* Banco */}
             <div 
               onClick={() => copyToClipboard(`${PAYMENT_DETAILS.bank} (${PAYMENT_DETAILS.bankCode})`, 'Banco')}
-              className="bg-[#040812] border border-slate-800/80 hover:border-cyan-500/60 p-2.5 rounded-xl cursor-pointer transition-all group flex items-start justify-between"
+              className="bg-[#040812] border border-slate-700/80 hover:border-cyan-400 p-2.5 rounded-xl cursor-pointer transition-all group flex items-start justify-between"
             >
               <div className="space-y-0.5">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500 flex items-center gap-1">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-300 flex items-center gap-1">
                   <Building2 className="w-3 h-3 text-cyan-400" /> Banco
                 </span>
-                <p className="text-xs font-bold text-cyan-300 font-mono group-hover:text-white transition-colors">
+                <p className="text-xs font-bold text-cyan-200 font-mono group-hover:text-white transition-colors">
                   {PAYMENT_DETAILS.bank}
                 </p>
-                <span className="text-[10px] text-slate-400 font-mono block">Cod: {PAYMENT_DETAILS.bankCode}</span>
+                <span className="text-[10px] text-slate-300 font-mono block">Cod: {PAYMENT_DETAILS.bankCode}</span>
               </div>
-              <button className="text-slate-500 group-hover:text-cyan-400 p-0.5">
+              <button
+                type="button"
+                aria-label="Copiar datos del banco"
+                className="text-slate-300 group-hover:text-cyan-300 p-0.5"
+              >
                 {copiedField === 'Banco' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
             </div>
@@ -206,18 +216,22 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
             {/* Cédula */}
             <div 
               onClick={() => copyToClipboard(PAYMENT_DETAILS.idNumber.replace(/\./g, ''), 'Cédula')}
-              className="bg-[#040812] border border-slate-800/80 hover:border-cyan-500/60 p-2.5 rounded-xl cursor-pointer transition-all group flex items-start justify-between"
+              className="bg-[#040812] border border-slate-700/80 hover:border-cyan-400 p-2.5 rounded-xl cursor-pointer transition-all group flex items-start justify-between"
             >
               <div className="space-y-0.5">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500 flex items-center gap-1">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-300 flex items-center gap-1">
                   <FileText className="w-3 h-3 text-cyan-400" /> Cédula
                 </span>
-                <p className="text-xs font-bold text-cyan-300 font-mono group-hover:text-white transition-colors">
+                <p className="text-xs font-bold text-cyan-200 font-mono group-hover:text-white transition-colors">
                   {PAYMENT_DETAILS.idNumber}
                 </p>
-                <span className="text-[10px] text-slate-400 block">V-{PAYMENT_DETAILS.idNumber.replace(/\./g, '')}</span>
+                <span className="text-[10px] text-slate-300 block">V-{PAYMENT_DETAILS.idNumber.replace(/\./g, '')}</span>
               </div>
-              <button className="text-slate-500 group-hover:text-cyan-400 p-0.5">
+              <button
+                type="button"
+                aria-label="Copiar número de cédula"
+                className="text-slate-300 group-hover:text-cyan-300 p-0.5"
+              >
                 {copiedField === 'Cédula' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
             </div>
@@ -225,18 +239,22 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
             {/* Teléfono */}
             <div 
               onClick={() => copyToClipboard(PAYMENT_DETAILS.phone.replace(/-/g, ''), 'Teléfono')}
-              className="bg-[#040812] border border-slate-800/80 hover:border-cyan-500/60 p-2.5 rounded-xl cursor-pointer transition-all group flex items-start justify-between"
+              className="bg-[#040812] border border-slate-700/80 hover:border-cyan-400 p-2.5 rounded-xl cursor-pointer transition-all group flex items-start justify-between"
             >
               <div className="space-y-0.5">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500 flex items-center gap-1">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-300 flex items-center gap-1">
                   <Phone className="w-3 h-3 text-cyan-400" /> Teléfono
                 </span>
-                <p className="text-xs font-bold text-cyan-300 font-mono group-hover:text-white transition-colors">
+                <p className="text-xs font-bold text-cyan-200 font-mono group-hover:text-white transition-colors">
                   {PAYMENT_DETAILS.phone}
                 </p>
-                <span className="text-[10px] text-slate-400 font-mono block">{PAYMENT_DETAILS.phone.replace(/-/g, '')}</span>
+                <span className="text-[10px] text-slate-300 font-mono block">{PAYMENT_DETAILS.phone.replace(/-/g, '')}</span>
               </div>
-              <button className="text-slate-500 group-hover:text-cyan-400 p-0.5">
+              <button
+                type="button"
+                aria-label="Copiar número de teléfono"
+                className="text-slate-300 group-hover:text-cyan-300 p-0.5"
+              >
                 {copiedField === 'Teléfono' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
             </div>
@@ -259,7 +277,11 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
                 {BINANCE_DETAILS.email}
               </p>
             </div>
-            <button className="bg-amber-400/10 text-amber-400 group-hover:bg-amber-400 group-hover:text-black p-1.5 rounded-lg transition-colors">
+            <button
+              type="button"
+              aria-label="Copiar correo de Binance Pay"
+              className="bg-amber-400/10 text-amber-400 group-hover:bg-amber-400 group-hover:text-black p-1.5 rounded-lg transition-colors"
+            >
               {copiedField === 'Correo Binance' ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
             </button>
           </div>
@@ -273,7 +295,7 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
             <p className="text-slate-300 text-[11px] leading-relaxed">
               Ingresar únicamente los <span className="text-amber-300 font-bold underline">últimos 6 dígitos</span> de tu Order ID de Binance.
             </p>
-            <p className="text-[11px] font-mono text-slate-400 bg-black/50 p-1.5 rounded border border-amber-500/20">
+            <p className="text-[11px] font-mono text-slate-300 bg-black/50 p-1.5 rounded border border-amber-500/20">
               Ejemplo: Si tu Order ID es 123456789012345678<span className="text-amber-300 font-bold underline">291840</span>, ingresa: <span className="text-amber-300 font-bold">291840</span>
             </p>
           </div>
@@ -297,7 +319,11 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
                   {PAYPAL_DETAILS.email}
                 </p>
               </div>
-              <button className="text-slate-500 group-hover:text-blue-400 p-0.5">
+              <button
+                type="button"
+                aria-label="Copiar correo de PayPal"
+                className="text-slate-300 group-hover:text-blue-300 p-0.5"
+              >
                 {copiedField === 'Correo PayPal' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
             </div>
@@ -308,20 +334,24 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
               className="bg-[#040812] border border-blue-500/40 hover:border-blue-400 p-2.5 rounded-xl cursor-pointer transition-all group flex items-start justify-between"
             >
               <div className="space-y-0.5">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-blue-400 flex items-center gap-1">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-blue-300 flex items-center gap-1 font-semibold">
                   <UserCheck className="w-3 h-3 text-blue-400" /> Titular de Cuenta
                 </span>
-                <p className="text-xs font-bold text-white font-mono group-hover:text-blue-300 transition-colors">
+                <p className="text-xs font-bold text-white font-mono group-hover:text-blue-200 transition-colors">
                   {PAYPAL_DETAILS.recipientName}
                 </p>
               </div>
-              <button className="text-slate-500 group-hover:text-blue-400 p-0.5">
+              <button
+                type="button"
+                aria-label="Copiar titular de cuenta PayPal"
+                className="text-slate-300 group-hover:text-blue-300 p-0.5"
+              >
                 {copiedField === 'Nombre PayPal' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
             </div>
           </div>
 
-          <p className="text-[11px] text-blue-300/80 bg-blue-950/40 p-2 rounded-lg border border-blue-500/30">
+          <p className="text-[11px] text-blue-200 bg-blue-950/60 p-2 rounded-lg border border-blue-500/40">
             💡 Envía el monto equivalente en USD ({priceInfo.formattedUsd}) a nuestra cuenta PayPal e ingresa tu ID de transacción.
           </p>
         </div>
@@ -331,6 +361,7 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
       <button
         type="button"
         onClick={copyAllPaymentData}
+        aria-label={`Copiar todos los datos de pago de ${selectedMethod === 'pagomovil' ? 'Pago Móvil' : selectedMethod === 'binance' ? 'Binance' : 'PayPal'}`}
         className="w-full bg-[#040812] hover:bg-cyan-500 hover:text-black border border-cyan-500/30 hover:border-cyan-400 text-slate-200 font-['Oswald'] uppercase tracking-wider text-xs py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-2 group shadow-md"
       >
         <CreditCard className="w-3.5 h-3.5 text-cyan-400 group-hover:text-black transition-colors" />
@@ -395,10 +426,11 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
         type="button"
         onClick={handleWhatsAppCheckout}
         disabled={!playerId || !selectedPackage || !referenceNumber.trim()}
+        aria-label="Enviar comprobante de pago por WhatsApp"
         className={`w-full py-3 px-4 rounded-xl font-['Oswald'] uppercase tracking-wider text-sm font-bold transition-all flex items-center justify-center gap-2.5 shadow-xl ${
           playerId && selectedPackage && referenceNumber.trim()
             ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/30 active:scale-[0.99] cursor-pointer'
-            : 'bg-slate-800 text-slate-500 border border-slate-700/60 cursor-not-allowed opacity-80'
+            : 'bg-slate-800 text-slate-300 border border-slate-700/60 cursor-not-allowed opacity-80'
         }`}
       >
         <MessageSquareText className="w-5 h-5" />
@@ -407,7 +439,7 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
       </button>
 
       {/* Guarantee Note */}
-      <div className="flex items-center justify-center gap-2 text-[10px] text-slate-500 pt-0.5">
+      <div className="flex items-center justify-center gap-2 text-[10px] text-slate-300 pt-0.5">
         <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
         <span>Atención rápida e inmediata por soporte de WhatsApp</span>
       </div>

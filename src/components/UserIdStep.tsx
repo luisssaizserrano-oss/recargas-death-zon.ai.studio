@@ -99,14 +99,15 @@ export const UserIdStep: React.FC<UserIdStepProps> = ({
             <h2 className="font-['Oswald'] text-sm sm:text-lg uppercase tracking-wider text-white flex items-center gap-1.5 leading-tight">
               Ingresa tu ID de Usuario
             </h2>
-            <p className="text-[11px] sm:text-xs text-slate-400 hidden xs:block">Verifica tu cuenta de Blood Strike para recargar</p>
+            <p className="text-[11px] sm:text-xs text-slate-300 hidden xs:block">Verifica tu cuenta de Blood Strike para recargar</p>
           </div>
         </div>
 
         <button
           type="button"
           onClick={onOpenGuide}
-          className="inline-flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-xs font-semibold text-cyan-400 hover:text-cyan-300 bg-cyan-950/40 hover:bg-cyan-900/50 border border-cyan-500/30 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl transition-all shrink-0 shadow-sm"
+          aria-label="¿Dónde encuentro mi User ID? Ver guía paso a paso"
+          className="inline-flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-xs font-semibold text-cyan-300 hover:text-cyan-200 bg-cyan-950/60 hover:bg-cyan-900/70 border border-cyan-500/40 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl transition-all shrink-0 shadow-sm"
         >
           <HelpCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
           <span className="hidden xs:inline">¿Dónde está mi ID?</span>
@@ -118,18 +119,19 @@ export const UserIdStep: React.FC<UserIdStepProps> = ({
       <div className="space-y-1.5 sm:space-y-2">
         <div className="flex flex-row gap-1.5 sm:gap-2">
           <div className="relative flex-1">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-              <User className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isVerified ? 'text-emerald-400' : isValidId ? 'text-cyan-400' : 'text-slate-500'}`} />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-300">
+              <User className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isVerified ? 'text-emerald-400' : isValidId ? 'text-cyan-400' : 'text-slate-400'}`} />
             </div>
 
             <input
               type="text"
               id="player-id"
+              aria-label="User ID de Blood Strike"
               value={playerId}
               onChange={handleIdChange}
               placeholder="Ej. 1234567890"
               maxLength={15}
-              className={`w-full pl-8 sm:pl-10 pr-9 sm:pr-11 py-2 sm:py-3 bg-[#040812] border rounded-xl text-white font-mono text-sm sm:text-base placeholder-slate-600 focus:outline-none transition-all ${
+              className={`w-full pl-8 sm:pl-10 pr-9 sm:pr-11 py-2 sm:py-3 bg-[#040812] border rounded-xl text-white font-mono text-sm sm:text-base placeholder-slate-400 focus:outline-none transition-all ${
                 isVerified
                   ? 'border-emerald-500/90 ring-2 ring-emerald-500/30 bg-emerald-950/20'
                   : isValidId
@@ -151,12 +153,13 @@ export const UserIdStep: React.FC<UserIdStepProps> = ({
             type="button"
             onClick={handleVerifyPlayer}
             disabled={!isValidId || isVerifying}
+            aria-label="Verificar User ID de Blood Strike"
             className={`py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl font-['Oswald'] uppercase tracking-wider text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 ${
               isVerified
                 ? 'bg-emerald-950 border border-emerald-500/60 text-emerald-300'
                 : isValidId
                 ? 'bg-cyan-500 hover:bg-cyan-400 text-black shadow-lg shadow-cyan-500/20 active:scale-95'
-                : 'bg-slate-800 text-slate-500 border border-slate-700/60 cursor-not-allowed opacity-70'
+                : 'bg-slate-800 text-slate-300 border border-slate-700/60 cursor-not-allowed opacity-70'
             }`}
           >
             {isVerifying ? (
@@ -179,7 +182,7 @@ export const UserIdStep: React.FC<UserIdStepProps> = ({
         </div>
 
         {/* Validation hint & History */}
-        <div className="flex flex-wrap items-center justify-between text-xs text-slate-400 px-1 pt-0.5">
+        <div className="flex flex-wrap items-center justify-between text-xs text-slate-300 px-1 pt-0.5">
           <span>
             {isVerified ? (
               <span className="text-emerald-400 font-semibold flex items-center gap-1.5">
@@ -187,9 +190,9 @@ export const UserIdStep: React.FC<UserIdStepProps> = ({
                 ID verificado correctamente
               </span>
             ) : isValidId ? (
-              <span className="text-cyan-400">Presiona <b>"Verificar ID"</b> para confirmar</span>
+              <span className="text-cyan-300">Presiona <b>"Verificar ID"</b> para confirmar</span>
             ) : playerId.length > 0 ? (
-              <span className="text-amber-400">Mínimo 5 dígitos (solo números)</span>
+              <span className="text-amber-300 font-medium">Mínimo 5 dígitos (solo números)</span>
             ) : (
               'Ingresa tu ID de Blood Strike'
             )}
@@ -198,15 +201,16 @@ export const UserIdStep: React.FC<UserIdStepProps> = ({
           {/* Recent IDs tags */}
           {recentIds.length > 0 && (
             <div className="flex items-center gap-1.5 mt-2 sm:mt-0">
-              <span className="text-[10px] uppercase text-slate-500 flex items-center gap-1">
-                <History className="w-3 h-3" /> Recientes:
+              <span className="text-[10px] uppercase text-slate-300 font-medium flex items-center gap-1">
+                <History className="w-3 h-3 text-cyan-400" /> Recientes:
               </span>
               {recentIds.map((id) => (
                 <button
                   key={id}
                   type="button"
                   onClick={() => handleSelectRecent(id)}
-                  className="px-2 py-0.5 rounded bg-slate-800/80 hover:bg-slate-700 text-cyan-300 font-mono text-[11px] border border-slate-700/60 transition-colors"
+                  aria-label={`Usar ID reciente ${id}`}
+                  className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-cyan-200 font-mono text-[11px] border border-slate-600 transition-colors"
                 >
                   {id}
                 </button>
@@ -214,10 +218,11 @@ export const UserIdStep: React.FC<UserIdStepProps> = ({
               <button
                 type="button"
                 onClick={handleClearRecent}
-                className="p-1 text-slate-500 hover:text-rose-400 transition-colors"
+                className="p-1 text-slate-300 hover:text-rose-300 transition-colors"
+                aria-label="Limpiar historial de IDs recientes"
                 title="Limpiar recientes"
               >
-                <Trash2 className="w-3 h-3" />
+                <Trash2 className="w-3.5 h-3.5" />
               </button>
             </div>
           )}

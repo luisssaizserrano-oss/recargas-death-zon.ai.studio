@@ -26,7 +26,9 @@ export const Toast: React.FC<ToastProps> = ({ message, type = 'success', onClose
         <p className="text-sm font-medium tracking-wide flex-1">{message}</p>
         
         <button 
+          type="button"
           onClick={onClose}
+          aria-label="Cerrar notificación"
           className="p-1 hover:bg-white/10 rounded transition-colors text-slate-400 hover:text-white"
         >
           <X className="w-4 h-4" />

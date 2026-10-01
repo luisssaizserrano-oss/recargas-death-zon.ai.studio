@@ -148,16 +148,26 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
       return (
         <div
           key={pkg.id}
+          role="button"
+          tabIndex={0}
+          aria-pressed={isSelected}
+          aria-label={`Seleccionar paquete ${pkg.amountLabel || pkg.name}, precio ${priceInfo.formattedBs}`}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onSelectPackage(pkg);
+            }
+          }}
           onClick={() => onSelectPackage(pkg)}
           className={`product-card card-gold ${isSelected ? 'card-selected' : ''}`}
         >
           {isSelected && <div className="selected-check-badge">✓</div>}
           {renderGoldSvg(pkg.id)}
-          <h3 className="gold-qty">{pkg.amountLabel || pkg.name}</h3>
+          <h4 className="gold-qty">{pkg.amountLabel || pkg.name}</h4>
           <span className="badge-bonus">{pkg.bonusBadge || '+BONUS'}</span>
           <div className="price-box">
             {appliedCoupon && (
-              <div className="text-[11px] text-slate-400 line-through font-mono mb-0.5">
+              <div className="text-[11px] text-slate-300 line-through font-mono mb-0.5">
                 {priceInfo.originalFormattedBs}
               </div>
             )}
@@ -172,6 +182,16 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
       return (
         <div
           key={pkg.id}
+          role="button"
+          tabIndex={0}
+          aria-pressed={isSelected}
+          aria-label={`Seleccionar ${pkg.name}, precio ${priceInfo.formattedBs}`}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onSelectPackage(pkg);
+            }
+          }}
           onClick={() => onSelectPackage(pkg)}
           className={`product-card card-levelup ${isSelected ? 'card-selected' : ''}`}
         >
@@ -184,6 +204,11 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
               <img
                 src={pkg.image}
                 alt={pkg.name}
+                width="92"
+                height="92"
+                loading="lazy"
+                decoding="async"
+                fetchPriority="low"
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-contain rounded-xl drop-shadow-[0_6px_14px_rgba(157,78,221,0.45)] hover:scale-105 transition-transform duration-300"
               />
@@ -195,11 +220,11 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
               </svg>
             )}
           </div>
-          <h3 className="gold-qty">{pkg.name}</h3>
+          <h4 className="gold-qty">{pkg.name}</h4>
           <p className="pass-description">{pkg.description}</p>
           <div className="price-box">
             {appliedCoupon && (
-              <div className="text-[11px] text-slate-400 line-through font-mono mb-0.5">
+              <div className="text-[11px] text-slate-300 line-through font-mono mb-0.5">
                 {priceInfo.originalFormattedBs}
               </div>
             )}
@@ -210,14 +235,34 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
       );
     }
 
-    // Strike Pass (Elite / Premium) or Other Passes
+    // Strike Pass (Elite / Premium), Chests or Other Passes
     const isPremium = pkg.id.includes('plus') || pkg.id.includes('premium');
     const isElite = pkg.id === 'pass-elite';
-    const cardClass = isPremium ? 'card-strikepass-premium' : isElite ? 'card-strikepass-elite' : 'card-strikepass';
+    const isUltraSkin = pkg.passBadge === 'ULTRA SKIN';
+    const isWeekly = pkg.passBadge === 'SEMANAL';
+    const cardClass = isPremium
+      ? 'card-strikepass-premium'
+      : isElite
+      ? 'card-strikepass-elite'
+      : isUltraSkin
+      ? 'card-strikepass-ultra'
+      : isWeekly
+      ? 'card-strikepass-weekly'
+      : 'card-strikepass';
 
     return (
       <div
         key={pkg.id}
+        role="button"
+        tabIndex={0}
+        aria-pressed={isSelected}
+        aria-label={`Seleccionar ${pkg.name}, precio ${priceInfo.formattedBs}`}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onSelectPackage(pkg);
+          }
+        }}
         onClick={() => onSelectPackage(pkg)}
         className={`product-card ${cardClass} ${isSelected ? 'card-selected' : ''}`}
       >
@@ -229,21 +274,36 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
               ? { background: 'linear-gradient(90deg, #ffb703, #fb8500)', color: '#000' }
               : isElite
               ? { background: '#00d2ff', color: '#000' }
+              : isUltraSkin
+              ? { background: 'linear-gradient(90deg, #d946ef, #8b5cf6)', color: '#fff' }
+              : isWeekly
+              ? { background: 'linear-gradient(90deg, #10b981, #06b6d4)', color: '#000' }
               : undefined
           }
         >
-          {isPremium ? 'PREMIUM' : isElite ? 'ELITE' : pkg.passBadge || 'TEMPORADA'}
+          {pkg.passBadge || (isPremium ? 'PREMIUM' : isElite ? 'ELITE' : 'TEMPORADA')}
         </span>
         <div className="pass-icon-container">
           {pkg.image ? (
             <img
               src={pkg.image}
               alt={pkg.name}
+              width="92"
+              height="92"
+              loading="lazy"
+              decoding="async"
+              fetchPriority="low"
               referrerPolicy="no-referrer"
               className={`w-full h-full object-cover rounded-xl transition-transform duration-300 hover:scale-105 ${
                 isPremium
                   ? 'border border-amber-400/40 drop-shadow-[0_6px_14px_rgba(255,183,3,0.45)]'
-                  : 'border border-cyan-400/40 drop-shadow-[0_6px_14px_rgba(0,210,255,0.45)]'
+                  : isElite
+                  ? 'border border-cyan-400/40 drop-shadow-[0_6px_14px_rgba(0,210,255,0.45)]'
+                  : isUltraSkin
+                  ? 'border border-fuchsia-400/50 drop-shadow-[0_6px_14px_rgba(217,70,239,0.45)]'
+                  : isWeekly
+                  ? 'border border-emerald-400/50 drop-shadow-[0_6px_14px_rgba(16,185,129,0.45)]'
+                  : 'border border-slate-700/60'
               }`}
             />
           ) : (
@@ -263,11 +323,11 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
             </svg>
           )}
         </div>
-        <h3 className="gold-qty">{pkg.name}</h3>
+        <h4 className="gold-qty">{pkg.name}</h4>
         <p className="pass-description">{pkg.description}</p>
         <div className="price-box">
           {appliedCoupon && (
-            <div className="text-[11px] text-slate-400 line-through font-mono mb-0.5">
+            <div className="text-[11px] text-slate-300 line-through font-mono mb-0.5">
               {priceInfo.originalFormattedBs}
             </div>
           )}
@@ -299,24 +359,26 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
                   </span>
                 )}
               </div>
-              <p className="text-[11px] sm:text-xs text-slate-400 hidden xs:block">Packs de Gold y Pases Oficiales para Blood Strike</p>
+              <p className="text-[11px] sm:text-xs text-slate-300 hidden xs:block">Packs de Gold y Pases Oficiales para Blood Strike</p>
             </div>
           </div>
 
           {/* Search Input */}
           <div className="relative w-full sm:w-56">
-            <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-300 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Buscar paquete..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 sm:pl-9 pr-7 py-1.5 sm:py-2 bg-[#060a12] border border-white/10 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#ffb703] transition-colors"
+              className="w-full pl-8 sm:pl-9 pr-7 py-1.5 sm:py-2 bg-[#060a12] border border-white/10 rounded-xl text-xs text-white placeholder-slate-400 focus:outline-none focus:border-[#ffb703] transition-colors"
             />
             {searchQuery && (
               <button
+                type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs"
+                aria-label="Borrar texto de búsqueda de paquetes"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-300 hover:text-white text-xs"
               >
                 ✕
               </button>
@@ -333,11 +395,14 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
           ].map((tab) => (
             <button
               key={tab.id}
+              type="button"
               onClick={() => setActiveTab(tab.id as PackageCategory | 'all')}
+              aria-pressed={activeTab === tab.id}
+              aria-label={`Filtrar paquetes por categoría: ${tab.label}`}
               className={`flex items-center gap-1 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold tracking-wide transition-all whitespace-nowrap cursor-pointer shrink-0 ${
                 activeTab === tab.id
                   ? 'bg-gradient-to-r from-[#ffd166] to-[#ffb703] text-black shadow-md shadow-amber-500/20'
-                  : 'bg-[#060a12] text-slate-400 hover:text-white border border-white/10 hover:border-white/20'
+                  : 'bg-[#060a12] text-slate-300 hover:text-white border border-white/10 hover:border-white/20'
               }`}
             >
               {tab.label}
@@ -347,11 +412,13 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
       </div>
 
       {filteredPackages.length === 0 ? (
-        <div className="py-8 sm:py-12 text-center text-slate-500 bg-[#0e1526]/80 rounded-2xl border border-white/10 space-y-2">
-          <Tag className="w-6 h-6 sm:w-7 sm:h-7 mx-auto text-slate-600" />
-          <p className="text-xs sm:text-sm font-semibold text-slate-300">No se encontraron productos con "{searchQuery}"</p>
+        <div className="py-8 sm:py-12 text-center text-slate-300 bg-[#0e1526]/80 rounded-2xl border border-white/10 space-y-2">
+          <Tag className="w-6 h-6 sm:w-7 sm:h-7 mx-auto text-slate-300" />
+          <p className="text-xs sm:text-sm font-semibold text-slate-200">No se encontraron productos con "{searchQuery}"</p>
           <button
+            type="button"
             onClick={() => setSearchQuery('')}
+            aria-label="Restablecer y limpiar búsqueda"
             className="text-xs text-[#ffd166] hover:underline font-semibold"
           >
             Limpiar búsqueda
@@ -362,7 +429,7 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
           {/* SECCIÓN RECARGAS DE ORO */}
           {(activeTab === 'all' || activeTab === 'gold') && goldPackages.length > 0 && (
             <div>
-              <h2 className="section-title">🏆 Recarga de Gold</h2>
+              <h3 className="section-title">🏆 Recarga de Gold</h3>
               <div className="products-grid">
                 {goldPackages.map((pkg) => renderProductCard(pkg))}
               </div>
@@ -372,7 +439,7 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
           {/* SECCIÓN PASES DE TEMPORADA */}
           {(activeTab === 'all' || activeTab === 'pass') && passPackages.length > 0 && (
             <div className={activeTab === 'all' && goldPackages.length > 0 ? 'mt-4 sm:mt-8' : undefined}>
-              <h2 className="section-title">🔥 Pases Oficiales</h2>
+              <h3 className="section-title">🔥 Pases Oficiales</h3>
               <div className="products-grid">
                 {passPackages.map((pkg) => renderProductCard(pkg))}
               </div>
@@ -382,7 +449,7 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
           {/* Otros paquetes si existen */}
           {otherPackages.length > 0 && (
             <div className="mt-4 sm:mt-8">
-              <h2 className="section-title">⚡ Paquetes Especiales</h2>
+              <h3 className="section-title">⚡ Paquetes Especiales</h3>
               <div className="products-grid">
                 {otherPackages.map((pkg) => renderProductCard(pkg))}
               </div>

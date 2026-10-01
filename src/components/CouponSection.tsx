@@ -40,14 +40,14 @@ export const CouponSection: React.FC<CouponSectionProps> = ({
             <Tag className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-cyan-400" />
           </div>
           <div>
-            <h3 className="font-['Oswald'] text-xs sm:text-base uppercase tracking-wider text-white leading-tight">
+            <h2 className="font-['Oswald'] text-xs sm:text-base uppercase tracking-wider text-white leading-tight">
               ¿Tienes un Cupón de Descuento?
-            </h3>
-            <p className="text-[10px] sm:text-[11px] text-slate-400 hidden xs:block">Ingresa tu código promocional para obtener un descuento</p>
+            </h2>
+            <p className="text-[10px] sm:text-[11px] text-slate-300 hidden xs:block">Ingresa tu código promocional para obtener un descuento</p>
           </div>
         </div>
         {appliedCoupon && (
-          <span className="text-[9px] sm:text-[10px] font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-500/40 px-2 sm:px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm shrink-0">
+          <span className="text-[9px] sm:text-[10px] font-bold text-emerald-300 bg-emerald-950 border border-emerald-500/60 px-2 sm:px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm shrink-0">
             <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-emerald-400" />
             -{appliedCoupon.percent}% Activo
           </span>
@@ -55,16 +55,17 @@ export const CouponSection: React.FC<CouponSectionProps> = ({
       </div>
 
       {appliedCoupon ? (
-        <div className="flex items-center justify-between bg-emerald-950/40 border border-emerald-500/50 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs">
+        <div className="flex items-center justify-between bg-emerald-950/60 border border-emerald-500/60 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs">
           <div className="flex items-center gap-1.5 sm:gap-2">
             <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 shrink-0" />
             <span className="font-bold text-emerald-300 font-mono tracking-wider text-xs">{appliedCoupon.code}</span>
-            <span className="text-[10px] sm:text-[11px] text-emerald-400 font-medium">(-{appliedCoupon.percent}%)</span>
+            <span className="text-[10px] sm:text-[11px] text-emerald-300 font-medium">(-{appliedCoupon.percent}%)</span>
           </div>
           <button
             type="button"
             onClick={onRemoveCoupon}
-            className="p-1 text-slate-400 hover:text-rose-400 transition-colors flex items-center gap-1 text-[11px]"
+            aria-label="Remover cupón de descuento aplicado"
+            className="p-1 text-slate-300 hover:text-rose-300 transition-colors flex items-center gap-1 text-[11px]"
             title="Remover cupón"
           >
             <X className="w-3.5 h-3.5" />
@@ -76,12 +77,14 @@ export const CouponSection: React.FC<CouponSectionProps> = ({
           <input
             type="text"
             placeholder="Código de cupón..."
+            aria-label="Código de cupón de descuento"
             value={couponInput}
             onChange={(e) => setCouponInput(e.target.value)}
-            className="flex-1 bg-[#040812] border border-slate-800 rounded-xl px-3 py-1.5 sm:py-2 text-xs text-white placeholder-slate-600 uppercase font-mono focus:outline-none focus:border-cyan-500 transition-colors"
+            className="flex-1 bg-[#040812] border border-slate-700 rounded-xl px-3 py-1.5 sm:py-2 text-xs text-white placeholder-slate-400 uppercase font-mono focus:outline-none focus:border-cyan-400 transition-colors"
           />
           <button
             type="submit"
+            aria-label="Canjear código de cupón"
             className="px-3 sm:px-4 py-1.5 sm:py-2 bg-cyan-500 hover:bg-cyan-400 active:scale-95 text-black font-bold text-xs rounded-xl font-['Oswald'] uppercase tracking-wider transition-all shrink-0 shadow-md shadow-cyan-500/20"
           >
             Canjear

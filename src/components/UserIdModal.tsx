@@ -12,6 +12,9 @@ export const UserIdModal: React.FC<UserIdModalProps> = ({ isOpen, onClose }) => 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
       <div 
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-id-title"
         className="relative w-full max-w-lg bg-[#0d1726] border-2 border-cyan-500/40 rounded-2xl p-6 text-white shadow-2xl shadow-cyan-950/50"
         onClick={(e) => e.stopPropagation()}
       >
@@ -22,13 +25,15 @@ export const UserIdModal: React.FC<UserIdModalProps> = ({ isOpen, onClose }) => 
               <HelpCircle className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-['Oswald'] text-xl uppercase tracking-wider text-white">¿Dónde encuentro mi User ID?</h3>
-              <p className="text-xs text-slate-400">Guía paso a paso para Blood Strike</p>
+              <h2 id="modal-id-title" className="font-['Oswald'] text-xl uppercase tracking-wider text-white">¿Dónde encuentro mi User ID?</h2>
+              <p className="text-xs text-slate-300">Guía paso a paso para Blood Strike</p>
             </div>
           </div>
           <button 
+            type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            aria-label="Cerrar ventana de ayuda"
+            className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -53,7 +58,7 @@ export const UserIdModal: React.FC<UserIdModalProps> = ({ isOpen, onClose }) => 
 
           {/* Visual ID Box Mockup */}
           <div className="p-4 bg-gradient-to-r from-slate-900 to-[#0a1220] border border-cyan-500/30 rounded-xl text-center space-y-1">
-            <span className="text-[10px] uppercase tracking-widest text-slate-400">Ejemplo de ID en el Juego</span>
+            <span className="text-[10px] uppercase tracking-widest text-slate-300">Ejemplo de ID en el Juego</span>
             <div className="font-mono text-lg font-bold text-cyan-400 bg-[#020610] py-2 px-4 rounded-lg border border-cyan-500/20 inline-flex items-center gap-2">
               <UserCheck className="w-4 h-4 text-emerald-400" />
               <span>1098475623</span>
@@ -69,7 +74,9 @@ export const UserIdModal: React.FC<UserIdModalProps> = ({ isOpen, onClose }) => 
         {/* Footer */}
         <div className="mt-6 pt-4 border-t border-slate-800 flex justify-end">
           <button
+            type="button"
             onClick={onClose}
+            aria-label="Cerrar modal de ayuda y continuar"
             className="w-full sm:w-auto px-6 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-black font-bold font-['Oswald'] uppercase tracking-wider rounded-xl transition-all"
           >
             Entendido

@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy, useEffect } from 'react';
 import { PackageItem } from './types';
 import { Header } from './components/Header';
 import { UserIdStep } from './components/UserIdStep';
 import { CouponSection } from './components/CouponSection';
 import { PackageGrid } from './components/PackageGrid';
-import { OrderSummary } from './components/OrderSummary';
-import { PagoMovilStep } from './components/PagoMovilStep';
-import { UserIdModal } from './components/UserIdModal';
 import { Toast } from './components/Toast';
 import { VALID_COUPONS, calculateEffectivePrice, WHATSAPP_NUMBER } from './data/packages';
 import { Gamepad2, ShieldCheck, MessageSquareText, Clock, Headphones, CheckCircle2, ArrowRight } from 'lucide-react';
-import bannerImg from './assets/images/death_zone_banner_1785795412357.jpg';
+
+// Lazy load non-critical components to minimize initial JS payload, prevent request chaining and improve LCP
+const UserIdModal = lazy(() => import('./components/UserIdModal').then((m) => ({ default: m.UserIdModal })));
+const PagoMovilStep = lazy(() => import('./components/PagoMovilStep').then((m) => ({ default: m.PagoMovilStep })));
+const OrderSummary = lazy(() => import('./components/OrderSummary').then((m) => ({ default: m.OrderSummary })));
 
 export default function App() {
   const [playerId, setPlayerId] = useState<string>('');
@@ -26,6 +27,24 @@ export default function App() {
     message: null,
     type: 'success',
   });
+
+  // Prefetch deferred steps during idle time so they are instant when the user scrolls or selects a package
+  useEffect(() => {
+    const prefetchModules = () => {
+      import('./components/PagoMovilStep');
+      import('./components/OrderSummary');
+    };
+
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      (window as unknown as { requestIdleCallback: (cb: () => void, opts?: { timeout: number }) => void }).requestIdleCallback(
+        prefetchModules,
+        { timeout: 1500 }
+      );
+    } else {
+      const timer = setTimeout(prefetchModules, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
     setToast({ message, type });
@@ -71,8 +90,13 @@ export default function App() {
       {/* Background Wallpaper */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <img
-          src={bannerImg}
+          src="/death_zone_wallpaper.webp"
           alt="Death Zone Fondo de Pantalla"
+          width="1440"
+          height="810"
+          loading="lazy"
+          decoding="async"
+          fetchPriority="low"
           referrerPolicy="no-referrer"
           className="w-full h-full object-cover object-top sm:object-center opacity-40 sm:opacity-45 scale-100"
         />
@@ -90,11 +114,15 @@ export default function App() {
           onClose={() => setToast({ message: null, type: 'success' })}
         />
 
-        {/* User ID Guide Modal */}
-        <UserIdModal
-          isOpen={isGuideOpen}
-          onClose={() => setIsGuideOpen(false)}
-        />
+        {/* User ID Guide Modal - Only loaded & mounted when opened */}
+        {isGuideOpen && (
+          <Suspense fallback={null}>
+            <UserIdModal
+              isOpen={isGuideOpen}
+              onClose={() => setIsGuideOpen(false)}
+            />
+          </Suspense>
+        )}
 
         {/* Header */}
         <Header />
@@ -103,7 +131,9 @@ export default function App() {
         <div className="sm:hidden sticky top-0 z-30 bg-[#060b16]/95 backdrop-blur-md border-b border-cyan-500/20 px-2 py-1.5 shadow-xl">
           <div className="flex items-center justify-between gap-1 text-[11px] font-['Oswald'] uppercase font-bold tracking-wider">
             <button
+              type="button"
               onClick={() => document.getElementById('step-1')?.scrollIntoView({ behavior: 'smooth' })}
+              aria-label="Ir al paso 1: ID de Usuario"
               className={`flex-1 py-1 px-1 rounded-lg flex items-center justify-center gap-1 transition-all ${
                 isVerified
                   ? 'text-emerald-300 bg-emerald-950/60 border border-emerald-500/40'
@@ -117,7 +147,9 @@ export default function App() {
             </button>
 
             <button
+              type="button"
               onClick={() => document.getElementById('step-2')?.scrollIntoView({ behavior: 'smooth' })}
+              aria-label="Ir al paso 2: Paquetes"
               className={`flex-1 py-1 px-1 rounded-lg flex items-center justify-center gap-1 transition-all ${
                 selectedPackage
                   ? 'text-amber-300 bg-amber-950/60 border border-amber-500/40'
@@ -129,22 +161,26 @@ export default function App() {
             </button>
 
             <button
+              type="button"
               onClick={() => document.getElementById('step-3')?.scrollIntoView({ behavior: 'smooth' })}
-              className="flex-1 py-1 px-1 rounded-lg flex items-center justify-center gap-1 text-slate-300 bg-[#0d1627] border border-slate-800 hover:text-white transition-all"
-            >
-              <span>3. Resumen</span>
-            </button>
-
-            <button
-              onClick={() => document.getElementById('step-4')?.scrollIntoView({ behavior: 'smooth' })}
+              aria-label="Ir al paso 3: Método de Pago"
               className={`flex-1 py-1 px-1 rounded-lg flex items-center justify-center gap-1 transition-all ${
                 referenceNumber.trim().length >= 3
                   ? 'text-emerald-300 bg-emerald-950/60 border border-emerald-500/40'
                   : 'text-slate-400 bg-[#0d1627] border border-slate-800'
               }`}
             >
-              <span>4. Pago</span>
+              <span>3. Pago</span>
               {referenceNumber.trim().length >= 3 && <CheckCircle2 className="w-3 h-3 text-emerald-400" />}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => document.getElementById('step-4')?.scrollIntoView({ behavior: 'smooth' })}
+              aria-label="Ir al paso 4: Resumen del Pedido"
+              className="flex-1 py-1 px-1 rounded-lg flex items-center justify-center gap-1 text-slate-300 bg-[#0d1627] border border-slate-800 hover:text-white transition-all"
+            >
+              <span>4. Resumen</span>
             </button>
           </div>
         </div>
@@ -177,27 +213,46 @@ export default function App() {
             appliedCoupon={appliedCoupon}
           />
 
-          {/* 3. Resumen de Pedido */}
-          <OrderSummary
-            playerId={playerId}
-            isVerified={isVerified}
-            selectedPackage={selectedPackage}
-            referenceNumber={referenceNumber}
-            appliedCoupon={appliedCoupon}
-            stepNumber={3}
-          />
+          {/* 3. Métodos de Pago & Registro de Referencia */}
+          <Suspense
+            fallback={
+              <div id="step-3" className="bg-[#0b1626]/90 border border-slate-800/80 rounded-2xl p-5 min-h-[320px] animate-pulse flex flex-col items-center justify-center text-center">
+                <div className="w-8 h-8 rounded-full border-2 border-cyan-500/40 border-t-cyan-400 animate-spin mb-3" />
+                <p className="text-slate-300 text-xs font-['Oswald'] tracking-wider uppercase">Cargando métodos de pago...</p>
+              </div>
+            }
+          >
+            <PagoMovilStep
+              playerId={playerId}
+              isVerified={isVerified}
+              selectedPackage={selectedPackage}
+              referenceNumber={referenceNumber}
+              setReferenceNumber={setReferenceNumber}
+              appliedCoupon={appliedCoupon}
+              onToast={showToast}
+              stepNumber={3}
+            />
+          </Suspense>
 
-          {/* 4. Métodos de Pago & Confirmación WhatsApp */}
-          <PagoMovilStep
-            playerId={playerId}
-            isVerified={isVerified}
-            selectedPackage={selectedPackage}
-            referenceNumber={referenceNumber}
-            setReferenceNumber={setReferenceNumber}
-            appliedCoupon={appliedCoupon}
-            onToast={showToast}
-            stepNumber={4}
-          />
+          {/* 4. Resumen de Pedido (Último paso) */}
+          <Suspense
+            fallback={
+              <div id="step-4" className="bg-[#0b1626]/90 border border-slate-800/80 rounded-2xl p-5 min-h-[220px] animate-pulse flex flex-col items-center justify-center text-center">
+                <div className="w-8 h-8 rounded-full border-2 border-emerald-500/40 border-t-emerald-400 animate-spin mb-3" />
+                <p className="text-slate-300 text-xs font-['Oswald'] tracking-wider uppercase">Cargando resumen de recarga...</p>
+              </div>
+            }
+          >
+            <OrderSummary
+              playerId={playerId}
+              isVerified={isVerified}
+              selectedPackage={selectedPackage}
+              referenceNumber={referenceNumber}
+              appliedCoupon={appliedCoupon}
+              stepNumber={4}
+              onToast={showToast}
+            />
+          </Suspense>
 
           {/* Clean Trust & Features Bar */}
           <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5 pt-1">
@@ -206,8 +261,8 @@ export default function App() {
                 <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
               <div>
-                <h4 className="font-['Oswald'] text-[10px] sm:text-xs uppercase text-white tracking-wide leading-tight">Entrega Rápida</h4>
-                <p className="text-[9px] sm:text-[11px] text-slate-400 hidden xs:block">5 a 15 min</p>
+                <p className="font-['Oswald'] font-bold text-[10px] sm:text-xs uppercase text-white tracking-wide leading-tight">Entrega Rápida</p>
+                <p className="text-[9px] sm:text-[11px] text-slate-300 hidden xs:block">5 a 15 min</p>
               </div>
             </div>
 
@@ -216,8 +271,8 @@ export default function App() {
                 <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
               <div>
-                <h4 className="font-['Oswald'] text-[10px] sm:text-xs uppercase text-white tracking-wide leading-tight">100% Seguro</h4>
-                <p className="text-[9px] sm:text-[11px] text-slate-400 hidden xs:block">Vía User ID</p>
+                <p className="font-['Oswald'] font-bold text-[10px] sm:text-xs uppercase text-white tracking-wide leading-tight">100% Seguro</p>
+                <p className="text-[9px] sm:text-[11px] text-slate-300 hidden xs:block">Vía User ID</p>
               </div>
             </div>
 
@@ -226,8 +281,8 @@ export default function App() {
                 <Headphones className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
               <div>
-                <h4 className="font-['Oswald'] text-[10px] sm:text-xs uppercase text-white tracking-wide leading-tight">Soporte Directo</h4>
-                <p className="text-[9px] sm:text-[11px] text-slate-400 hidden xs:block">WhatsApp</p>
+                <p className="font-['Oswald'] font-bold text-[10px] sm:text-xs uppercase text-white tracking-wide leading-tight">Soporte Directo</p>
+                <p className="text-[9px] sm:text-[11px] text-slate-300 hidden xs:block">WhatsApp</p>
               </div>
             </div>
           </div>
@@ -237,7 +292,7 @@ export default function App() {
         <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#070e1c]/95 backdrop-blur-lg border-t border-slate-800/90 px-3 py-2 shadow-2xl">
           <div className="max-w-md mx-auto flex items-center justify-between gap-2.5">
             <div>
-              <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider truncate max-w-[140px]">
+              <span className="text-[10px] uppercase font-bold text-slate-300 block tracking-wider truncate max-w-[140px]">
                 {selectedPackage ? selectedPackage.name : 'Paso 2: Elige Paquete'}
               </span>
               <div className="flex items-baseline gap-1.5">
@@ -245,7 +300,7 @@ export default function App() {
                   {currentPriceInfo ? currentPriceInfo.formattedBs : '0,00 Bs'}
                 </span>
                 {currentPriceInfo && (
-                  <span className="text-[10px] text-slate-400 font-mono">
+                  <span className="text-[10px] text-slate-300 font-mono">
                     ({currentPriceInfo.formattedUsd})
                   </span>
                 )}
@@ -254,22 +309,28 @@ export default function App() {
 
             {!selectedPackage ? (
               <button
+                type="button"
                 onClick={() => document.getElementById('step-2')?.scrollIntoView({ behavior: 'smooth' })}
-                className="px-3.5 py-2 rounded-xl font-['Oswald'] uppercase tracking-wider text-xs font-bold transition-all flex items-center gap-1.5 shadow-md bg-gradient-to-r from-amber-400 to-amber-500 active:from-amber-300 active:to-amber-400 text-black shadow-amber-500/20"
+                aria-label="Ver paquetes de recarga disponibles"
+                className="px-3.5 py-2 rounded-xl font-['Oswald'] uppercase tracking-wider text-xs font-bold transition-all flex items-center gap-1.5 shadow-md bg-gradient-to-r from-amber-400 to-amber-500 active:from-amber-300 active:to-amber-400 text-black shadow-amber-500/20 cursor-pointer"
               >
                 <span>Ver Paquetes</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             ) : !referenceNumber.trim() ? (
               <button
-                onClick={() => document.getElementById('step-4')?.scrollIntoView({ behavior: 'smooth' })}
-                className="px-3.5 py-2 rounded-xl font-['Oswald'] uppercase tracking-wider text-xs font-bold transition-all flex items-center gap-1.5 shadow-md bg-cyan-500 active:bg-cyan-400 text-black shadow-cyan-500/20"
+                type="button"
+                onClick={() => document.getElementById('step-3')?.scrollIntoView({ behavior: 'smooth' })}
+                aria-label="Ir a métodos de pago y registrar comprobante"
+                className="px-3.5 py-2 rounded-xl font-['Oswald'] uppercase tracking-wider text-xs font-bold transition-all flex items-center gap-1.5 shadow-md bg-cyan-500 active:bg-cyan-400 text-black shadow-cyan-500/20 cursor-pointer"
               >
                 <span>Ir al Pago</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             ) : (
               <button
+                type="button"
+                aria-label="Finalizar compra y enviar comprobante por WhatsApp"
                 onClick={() => {
                   if (!playerId || playerId.trim().length < 5) {
                     showToast('Ingresa tu ID de Usuario en el Paso 1', 'error');
@@ -282,8 +343,8 @@ export default function App() {
                     return;
                   }
                   if (!referenceNumber || referenceNumber.trim().length < 3) {
-                    showToast('Ingresa tu N° de Referencia en el Paso 4', 'error');
-                    document.getElementById('step-4')?.scrollIntoView({ behavior: 'smooth' });
+                    showToast('Ingresa tu N° de Referencia en el Paso 3 (Pago)', 'error');
+                    document.getElementById('step-3')?.scrollIntoView({ behavior: 'smooth' });
                     return;
                   }
 
@@ -304,7 +365,7 @@ export default function App() {
                   const encodedText = encodeURIComponent(mensaje);
                   window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodedText}`, '_blank');
                 }}
-                className="px-3.5 py-2 rounded-xl font-['Oswald'] uppercase tracking-wider text-xs font-bold transition-all flex items-center gap-1.5 shadow-md bg-emerald-500 active:bg-emerald-400 text-black shadow-emerald-500/30"
+                className="px-3.5 py-2 rounded-xl font-['Oswald'] uppercase tracking-wider text-xs font-bold transition-all flex items-center gap-1.5 shadow-md bg-emerald-500 active:bg-emerald-400 text-black shadow-emerald-500/30 cursor-pointer"
               >
                 <MessageSquareText className="w-3.5 h-3.5" />
                 <span>WhatsApp</span>
@@ -314,23 +375,23 @@ export default function App() {
         </div>
 
         {/* Footer */}
-        <footer className="bg-[#020610]/90 border-t border-slate-800/80 py-4 mt-6 text-slate-500 text-xs">
+        <footer className="bg-[#020610]/90 border-t border-slate-800/80 py-4 mt-6 text-slate-300 text-xs">
           <div className="max-w-3xl mx-auto px-4 text-center space-y-1.5">
-            <div className="flex items-center justify-center gap-2 text-slate-400 font-['Oswald'] uppercase tracking-widest text-xs">
+            <div className="flex items-center justify-center gap-2 text-slate-200 font-['Oswald'] uppercase tracking-widest text-xs">
               <Gamepad2 className="w-3.5 h-3.5 text-cyan-400" />
               <span>RECARGAS DEATH ZONE</span>
-              <span className="text-slate-600">•</span>
+              <span className="text-slate-400">•</span>
               <span>BLOOD STRIKE</span>
             </div>
 
-            <p className="max-w-xl mx-auto leading-relaxed text-slate-500 text-[11px]">
+            <p className="max-w-xl mx-auto leading-relaxed text-slate-300 text-[11px]">
               Servicios de recargas oficiales por User ID para Blood Strike en Venezuela. Aceptamos Pago Móvil (Bs), Binance Pay (USDT) y PayPal ($ USD).
             </p>
 
-            <div className="pt-1 border-t border-slate-900/80 flex flex-wrap items-center justify-center gap-3 text-[10px] text-slate-600">
+            <div className="pt-1 border-t border-slate-900/80 flex flex-wrap items-center justify-center gap-3 text-[10px] text-slate-400">
               <span>© {new Date().getFullYear()} Death Zone Recargas. Todos los derechos reservados.</span>
               <span>•</span>
-              <span className="flex items-center gap-1 text-slate-400">
+              <span className="flex items-center gap-1 text-slate-300">
                 <ShieldCheck className="w-3 h-3 text-emerald-400" /> Transacciones Seguras
               </span>
             </div>

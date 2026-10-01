@@ -1,7 +1,9 @@
 import { PackageItem, PaymentInfo, BinancePaymentInfo, PaypalPaymentInfo } from '../types';
-import strikePassEliteImg from '../assets/images/strike_pass_elite_1790404061640.jpg';
-import strikePassPremiumImg from '../assets/images/strike_pass_premium_1790404070746.jpg';
-import levelUpPassImg from '../assets/images/level_up_pass_1790404080850.jpg';
+import strikePassEliteImg from '../assets/images/strike_pass_elite.webp';
+import strikePassPremiumImg from '../assets/images/strike_pass_premium.webp';
+import levelUpPassImg from '../assets/images/level_up_pass.webp';
+import bsBolsaSemanalImg from '../assets/images/bs_bolsa_semanal.webp';
+import bsUltraChestImg from '../assets/images/bs_ultra_chest.webp';
 
 export const PAYMENT_DETAILS: PaymentInfo = {
   bank: 'Banco de Venezuela',
@@ -24,10 +26,11 @@ export const PAYPAL_DETAILS: PaypalPaymentInfo = {
 export const WHATSAPP_NUMBER = '584148015751';
 
 export const VALID_COUPONS: Record<string, number> = {
-  LAOSTIA: 5,
-  BETANVOID: 5,
-  FIREBALL: 5,
-  SHIJARU: 5,
+  LAOSTIA: 3,
+  BETANVOID: 3,
+  FIREBALL: 3,
+  SHIJARU: 3,
+  ZIDOZO: 3,
 };
 
 export function formatBs(amount: number): string {
@@ -71,9 +74,9 @@ export const PACKAGES: PackageItem[] = [
     id: 'gold-105',
     name: '100 + 5 Golds',
     category: 'gold',
-    priceBs: '882,70 Bs',
-    priceNumeric: 882.70,
-    priceUsd: 0.91,
+    priceBs: '820,00 Bs',
+    priceNumeric: 820.00,
+    priceUsd: 0.85,
     discountBadge: '',
     iconType: 'gold',
     cardType: 'gold',
@@ -85,9 +88,9 @@ export const PACKAGES: PackageItem[] = [
     id: 'gold-320',
     name: '300 + 20 Golds',
     category: 'gold',
-    priceBs: '2.418,36 Bs',
-    priceNumeric: 2418.36,
-    priceUsd: 2.60,
+    priceBs: '2.500,00 Bs',
+    priceNumeric: 2500.00,
+    priceUsd: 2.59,
     discountBadge: '',
     iconType: 'gold',
     cardType: 'gold',
@@ -99,9 +102,9 @@ export const PACKAGES: PackageItem[] = [
     id: 'gold-540',
     name: '500 + 40 Golds',
     category: 'gold',
-    priceBs: '4.016,51 Bs',
-    priceNumeric: 4016.51,
-    priceUsd: 4.75,
+    priceBs: '4.130,00 Bs',
+    priceNumeric: 4130.00,
+    priceUsd: 4.28,
     discountBadge: '',
     iconType: 'gold',
     cardType: 'gold',
@@ -113,9 +116,9 @@ export const PACKAGES: PackageItem[] = [
     id: 'gold-1100',
     name: '1000 + 100 Golds',
     category: 'gold',
-    priceBs: '8.904,60 Bs',
-    priceNumeric: 8904.60,
-    priceUsd: 9.18,
+    priceBs: '8.300,00 Bs',
+    priceNumeric: 8300.00,
+    priceUsd: 8.61,
     discountBadge: '',
     popular: true,
     iconType: 'gold',
@@ -128,9 +131,9 @@ export const PACKAGES: PackageItem[] = [
     id: 'gold-2260',
     name: '2000 + 260 Golds',
     category: 'gold',
-    priceBs: '17.799,50 Bs',
-    priceNumeric: 17799.50,
-    priceUsd: 18.35,
+    priceBs: '16.500,00 Bs',
+    priceNumeric: 16500.00,
+    priceUsd: 17.12,
     discountBadge: '',
     iconType: 'gold',
     cardType: 'gold',
@@ -142,9 +145,9 @@ export const PACKAGES: PackageItem[] = [
     id: 'gold-5800',
     name: '5000 + 800 Golds',
     category: 'gold',
-    priceBs: '44.367,80 Bs',
-    priceNumeric: 44367.80,
-    priceUsd: 45.74,
+    priceBs: '41.200,00 Bs',
+    priceNumeric: 41200.00,
+    priceUsd: 42.74,
     discountBadge: '',
     iconType: 'gold',
     cardType: 'gold',
@@ -153,51 +156,83 @@ export const PACKAGES: PackageItem[] = [
     description: 'Mega Pack: 5.800 Gold en total con bono masivo.'
   },
 
-  // PASES OFICIALES BLOOD STRIKE
-  {
-    id: 'pass-mejora',
-    name: 'Level-Up Pass',
-    category: 'pass',
-    priceBs: '2.800,00 Bs',
-    priceNumeric: 2800.00,
-    priceUsd: 3.30,
-    discountBadge: '',
-    iconType: 'pass',
-    cardType: 'levelup',
-    amountLabel: 'Level Up Pass',
-    passBadge: 'PROGRESO',
-    description: 'Consigue hasta 1,200 Gold acumulativos a medida que subes de nivel en tu cuenta.',
-    image: levelUpPassImg
-  },
-  {
-    id: 'pass-elite',
-    name: 'Strike Pass Elite',
-    category: 'pass',
-    priceBs: '3.200,00 Bs',
-    priceNumeric: 3200.00,
-    priceUsd: 3.80,
-    discountBadge: '',
-    popular: true,
-    iconType: 'pass',
-    cardType: 'strikepass',
-    amountLabel: 'Strike Pass Elite',
-    passBadge: 'TEMPORADA',
-    description: 'Desbloquea Skins de Striker Exclusivas, Armas Legendarias y Oro de la Temporada.',
-    image: strikePassEliteImg
-  },
+  // PASES Y ESPECIALES OFICIALES BLOOD STRIKE
   {
     id: 'pass-elite-plus',
-    name: 'Strike Pass Premium',
+    name: 'Pase Premium',
     category: 'pass',
-    priceBs: '9.389,60 Bs',
-    priceNumeric: 9389.60,
-    priceUsd: 9.68,
+    priceBs: '8.250,00 Bs',
+    priceNumeric: 8250.00,
+    priceUsd: 8.56,
     discountBadge: '',
+    popular: true,
     iconType: 'pass',
     cardType: 'strikepass',
     amountLabel: 'Strike Pass Premium',
     passBadge: 'PREMIUM',
     description: 'Pase Elite completo + subida instantánea de niveles y recompensas exclusivas.',
     image: strikePassPremiumImg
+  },
+  {
+    id: 'pass-elite',
+    name: 'Pase Élite',
+    category: 'pass',
+    priceBs: '3.700,00 Bs',
+    priceNumeric: 3700.00,
+    priceUsd: 3.84,
+    discountBadge: '',
+    iconType: 'pass',
+    cardType: 'strikepass',
+    amountLabel: 'Strike Pass Elite',
+    passBadge: 'ELITE',
+    description: 'Desbloquea Skins de Striker Exclusivas, Armas Legendarias y Oro de la Temporada.',
+    image: strikePassEliteImg
+  },
+  {
+    id: 'pass-mejora',
+    name: 'Pase de Nivel',
+    category: 'pass',
+    priceBs: '2.100,00 Bs',
+    priceNumeric: 2100.00,
+    priceUsd: 2.18,
+    discountBadge: '',
+    iconType: 'pass',
+    cardType: 'levelup',
+    amountLabel: 'Pase de Nivel',
+    passBadge: 'PROGRESO',
+    description: 'Consigue hasta 1,200 Gold acumulativos a medida que subes de nivel en tu cuenta.',
+    image: levelUpPassImg
+  },
+  {
+    id: 'pass-bolsa-semanal',
+    name: 'Bolsa Semanal',
+    category: 'pass',
+    priceBs: '950,00 Bs',
+    priceNumeric: 950.00,
+    priceUsd: 0.99,
+    discountBadge: '',
+    popular: true,
+    iconType: 'pass',
+    cardType: 'strikepass',
+    amountLabel: 'Bolsa Semanal',
+    passBadge: 'SEMANAL',
+    description: 'Bolsa Semanal de la Suerte con Gold acumulativo y recompensas exclusivas.',
+    image: bsBolsaSemanalImg
+  },
+  {
+    id: 'pass-cofre-ultra-skin',
+    name: 'Cofre de la Suerte',
+    category: 'pass',
+    priceBs: '500,00 Bs',
+    priceNumeric: 500.00,
+    priceUsd: 0.52,
+    discountBadge: '',
+    popular: true,
+    iconType: 'pass',
+    cardType: 'strikepass',
+    amountLabel: 'Cofre Ultra Skin',
+    passBadge: 'ULTRA SKIN',
+    description: 'Cofre Ultra Skin con probabilidades de armas legendarias y skins de alto nivel.',
+    image: bsUltraChestImg
   }
 ];
