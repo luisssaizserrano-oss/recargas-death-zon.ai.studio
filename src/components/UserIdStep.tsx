@@ -81,7 +81,7 @@ export const UserIdStep: React.FC<UserIdStepProps> = ({
 
   const handleVerifyPlayer = async () => {
     if (!playerId || playerId.length < 5) {
-      const errMsg = 'Ingresa tu User ID de 12 dígitos';
+      const errMsg = 'Ingresa tu ID de Blood Strike';
       setStatusColor('red');
       setStatusMessage(`❌ Error: ${errMsg}`);
       setIsVerified(false);

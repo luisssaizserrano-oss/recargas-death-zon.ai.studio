@@ -92,7 +92,7 @@ export default function App() {
       if (playerId && playerId.trim().length >= 5) {
         setIsVerified(true);
       } else {
-        showToast('Por favor ingresa tu ID de usuario en el Paso 1.', 'info');
+        showToast('Ingresa tu ID de Blood Strike', 'info');
         document.getElementById('step-1')?.scrollIntoView({ behavior: 'smooth' });
         return;
       }
@@ -124,7 +124,7 @@ export default function App() {
       if (playerId && playerId.trim().length >= 5) {
         setIsVerified(true);
       } else {
-        showToast('Por favor ingresa tu ID de usuario en el Paso 1.', 'info');
+        showToast('Ingresa tu ID de Blood Strike', 'info');
         document.getElementById('step-1')?.scrollIntoView({ behavior: 'smooth' });
         return;
       }
