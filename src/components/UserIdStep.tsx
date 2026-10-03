@@ -234,7 +234,7 @@ export const UserIdStep: React.FC<UserIdStepProps> = ({
               value={playerId}
               onChange={handleIdChange}
               placeholder="Ej. 109847562301"
-              maxLength={12}
+              maxLength={15}
               className={`w-full pl-8 sm:pl-10 pr-9 sm:pr-11 py-2 sm:py-3 bg-[#040812] border rounded-xl text-white font-mono text-sm sm:text-base placeholder-slate-400 focus:outline-none transition-all ${
                 isVerified
                   ? 'border-emerald-500/90 ring-2 ring-emerald-500/30 bg-emerald-950/20'
@@ -335,11 +335,11 @@ export const UserIdStep: React.FC<UserIdStepProps> = ({
                 El carrito permanece bloqueado hasta ingresar un ID válido.
               </span>
             ) : isValidId ? (
-              <span className="text-cyan-300">Presiona <b>"Verificar"</b> para consultar tu cuenta</span>
+              <span className="text-cyan-300">Presiona <b>"Verificar"</b> para confirmar tu cuenta</span>
             ) : playerId.length > 0 ? (
-              <span className="text-amber-300 font-medium">Ingresa los 12 dígitos de tu ID ({playerId.length}/12)</span>
+              <span className="text-amber-300 font-medium">Mínimo 5 dígitos ({playerId.length}/12)</span>
             ) : (
-              'Ingresa tu ID de 12 dígitos de Blood Strike'
+              'Ingresa tu User ID de Blood Strike'
             )}
           </span>
 

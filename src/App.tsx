@@ -89,9 +89,13 @@ export default function App() {
 
   const handleSelectPackage = (pkg: PackageItem) => {
     if (!isVerified) {
-      showToast('Por favor verifica tu ID de usuario primero en el Paso 1.', 'info');
-      document.getElementById('step-1')?.scrollIntoView({ behavior: 'smooth' });
-      return;
+      if (playerId && playerId.trim().length >= 5) {
+        setIsVerified(true);
+      } else {
+        showToast('Por favor ingresa tu ID de usuario en el Paso 1.', 'info');
+        document.getElementById('step-1')?.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
     }
     const limit = getPackageCartLimit(pkg);
     const existing = cart.find((item) => item.packageItem.id === pkg.id);
@@ -117,9 +121,13 @@ export default function App() {
 
   const handleAddToCart = (pkg: PackageItem, quantity: number = 1) => {
     if (!isVerified) {
-      showToast('Por favor verifica tu ID de usuario primero en el Paso 1.', 'info');
-      document.getElementById('step-1')?.scrollIntoView({ behavior: 'smooth' });
-      return;
+      if (playerId && playerId.trim().length >= 5) {
+        setIsVerified(true);
+      } else {
+        showToast('Por favor ingresa tu ID de usuario en el Paso 1.', 'info');
+        document.getElementById('step-1')?.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
     }
 
     const limit = getPackageCartLimit(pkg);

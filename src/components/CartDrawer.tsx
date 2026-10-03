@@ -289,24 +289,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  if (!isVerified) {
-                    if (onToast) {
-                      onToast('Por favor verifica tu ID de usuario primero en el Paso 1.', 'info');
-                    }
-                    onClose();
-                    document.getElementById('step-1')?.scrollIntoView({ behavior: 'smooth' });
-                    return;
-                  }
                   onProceedToCheckout();
                   onClose();
                 }}
-                className={`w-full py-3 px-4 rounded-xl font-['Oswald'] uppercase tracking-wider text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-lg cursor-pointer ${
-                  isVerified
-                    ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-black shadow-emerald-500/20 active:scale-[0.99]'
-                    : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40'
-                }`}
+                className="w-full py-3 px-4 rounded-xl font-['Oswald'] uppercase tracking-wider text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-lg cursor-pointer bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-black shadow-emerald-500/20 active:scale-[0.99]"
               >
-                <span>{isVerified ? `Proceder al Pago (${totals.itemCount})` : '⚠️ Verificar ID de Usuario Primero'}</span>
+                <span>Proceder al Pago ({totals.itemCount})</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
