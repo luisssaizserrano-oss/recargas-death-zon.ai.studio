@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { User, HelpCircle, CheckCircle2, History, Trash2, ShieldCheck, Loader2 } from 'lucide-react';
+import { User, HelpCircle, CheckCircle2, History, Trash2, ShieldCheck, Loader2, Sparkles } from 'lucide-react';
+import { validarIdGame } from '../services/vothApi';
 
 interface UserIdStepProps {
   playerId: string;
   setPlayerId: (id: string) => void;
   isVerified: boolean;
   setIsVerified: (verified: boolean) => void;
+  playerNickname?: string;
+  setPlayerNickname?: (name: string) => void;
   onOpenGuide: () => void;
   onToast: (msg: string, type?: 'success' | 'error' | 'info') => void;
 }
@@ -15,6 +18,8 @@ export const UserIdStep: React.FC<UserIdStepProps> = ({
   setPlayerId,
   isVerified,
   setIsVerified,
+  playerNickname = '',
+  setPlayerNickname,
   onOpenGuide,
   onToast,
 }) => {
@@ -39,6 +44,9 @@ export const UserIdStep: React.FC<UserIdStepProps> = ({
     if (isVerified) {
       setIsVerified(false); // Reset verification check if ID changes
     }
+    if (playerNickname && setPlayerNickname) {
+      setPlayerNickname('');
+    }
   };
 
   const handleSaveId = (idToSave: string) => {
@@ -52,7 +60,7 @@ export const UserIdStep: React.FC<UserIdStepProps> = ({
     }
   };
 
-  const handleVerifyPlayer = () => {
+  const handleVerifyPlayer = async () => {
     if (!playerId || playerId.length < 5) {
       onToast('Por favor ingresa un ID válido (mínimo 5 dígitos)', 'error');
       return;
@@ -61,18 +69,54 @@ export const UserIdStep: React.FC<UserIdStepProps> = ({
     setIsVerifying(true);
     setIsVerified(false);
 
-    setTimeout(() => {
+    try {
+      const resultado = await validarIdGame(playerId);
+
+      if (resultado.success && resultado.valid) {
+        // ÉXITO: El ID existe y te devuelve el nombre del personaje
+        setIsVerified(true);
+        if (setPlayerNickname) {
+          setPlayerNickname(resultado.nickname || '');
+        }
+        handleSaveId(playerId);
+        onToast(`Jugador encontrado: ${resultado.nickname || 'Cuenta Verificada'}`, 'success');
+      } else {
+        // ERROR: El ID no se encuentra en los servidores de NetEase
+        setIsVerified(false);
+        if (setPlayerNickname) {
+          setPlayerNickname('');
+        }
+        onToast(resultado.error || 'ID Inválido. Por favor verifica tus datos.', 'error');
+      }
+    } catch (error) {
+      console.error('Error en la conexión de la API de validación:', error);
+      setIsVerified(false);
+      onToast('Error temporal del sistema. Intenta de nuevo.', 'error');
+    } finally {
       setIsVerifying(false);
-      setIsVerified(true);
-      handleSaveId(playerId);
-      onToast('ID de Usuario verificado con éxito ✓', 'success');
-    }, 600);
+    }
   };
 
-  const handleSelectRecent = (id: string) => {
+  const handleSelectRecent = async (id: string) => {
     setPlayerId(id);
-    setIsVerified(true);
-    onToast(`ID ${id} cargado y verificado`, 'success');
+    setIsVerifying(true);
+    setIsVerified(false);
+    try {
+      const resultado = await validarIdGame(id);
+      if (resultado.success && resultado.valid) {
+        setIsVerified(true);
+        if (setPlayerNickname) {
+          setPlayerNickname(resultado.nickname || '');
+        }
+        onToast(`Jugador encontrado: ${resultado.nickname || id}`, 'success');
+      } else {
+        onToast(resultado.error || 'ID Inválido. Por favor verifica tus datos.', 'error');
+      }
+    } catch {
+      onToast('Error temporal del sistema. Intenta de nuevo.', 'error');
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   const handleClearRecent = () => {
@@ -227,6 +271,28 @@ export const UserIdStep: React.FC<UserIdStepProps> = ({
             </div>
           )}
         </div>
+
+        {/* Jugador Encontrado / Nickname Card */}
+        {isVerified && playerNickname && (
+          <div className="p-2.5 sm:p-3 rounded-xl bg-gradient-to-r from-emerald-950/70 via-[#06201a] to-emerald-950/70 border border-emerald-500/50 flex items-center justify-between shadow-lg shadow-emerald-950/40 animate-fadeIn">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm border border-emerald-500/40 shrink-0">
+                <Sparkles className="w-4 h-4 text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-[10px] sm:text-[11px] uppercase font-bold text-emerald-400 tracking-wider flex items-center gap-1">
+                  <span>Jugador Encontrado (Servidores NetEase)</span>
+                </p>
+                <p className="text-xs sm:text-sm font-extrabold text-white font-['Oswald'] tracking-wide">
+                  {playerNickname}
+                </p>
+              </div>
+            </div>
+            <span className="text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded bg-emerald-900/80 border border-emerald-500/50 text-emerald-300 shrink-0 flex items-center gap-1">
+              <CheckCircle2 className="w-3 h-3 text-emerald-400" /> Verificado
+            </span>
+          </div>
+        )}
       </div>
     </section>
   );

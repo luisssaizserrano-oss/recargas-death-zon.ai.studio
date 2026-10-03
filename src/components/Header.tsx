@@ -1,8 +1,13 @@
 import React from 'react';
-import { ShieldCheck, Zap, MessageSquareText, Gamepad2 } from 'lucide-react';
+import { ShieldCheck, Zap, MessageSquareText, Gamepad2, ShoppingCart } from 'lucide-react';
 import { WHATSAPP_NUMBER } from '../data/packages';
 
-export const Header: React.FC = () => {
+interface HeaderProps {
+  cartCount?: number;
+  onOpenCart?: () => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({ cartCount = 0, onOpenCart }) => {
   return (
     <header className="relative bg-[#050b14]/85 backdrop-blur-md border-b border-cyan-500/20 shadow-[0_4px_30px_rgba(0,0,0,0.6)] z-20">
       <div className="max-w-3xl mx-auto px-3 sm:px-4 py-2 sm:py-4">
@@ -34,16 +39,35 @@ export const Header: React.FC = () => {
             </div>
           </div>
 
-          <a
-            href={`https://wa.me/${WHATSAPP_NUMBER}`}
-            target="_blank"
-            rel="noreferrer"
-            aria-label="Contactar soporte por WhatsApp"
-            className="bg-[#0b1626] hover:bg-[#12233c] text-white border border-cyan-500/40 px-2.5 py-1.5 rounded-lg text-[11px] font-bold uppercase font-['Oswald'] tracking-wider flex items-center gap-1.5 shrink-0 shadow"
-          >
-            <MessageSquareText className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Soporte</span>
-          </a>
+          <div className="flex items-center gap-1.5">
+            {onOpenCart && (
+              <button
+                type="button"
+                onClick={onOpenCart}
+                aria-label="Abrir carrito de compras"
+                className="relative bg-[#0b1626] hover:bg-[#12233c] text-cyan-300 border border-cyan-500/40 px-2 py-1.5 rounded-lg text-[11px] font-bold uppercase font-['Oswald'] tracking-wider flex items-center gap-1 shrink-0 shadow cursor-pointer"
+              >
+                <ShoppingCart className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="hidden xs:inline">Carrito</span>
+                {cartCount > 0 && (
+                  <span className="bg-emerald-400 text-black font-black text-[10px] min-w-[18px] h-[18px] rounded-full flex items-center justify-center font-mono px-1">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+            )}
+
+            <a
+              href={`https://wa.me/${WHATSAPP_NUMBER}`}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Contactar soporte por WhatsApp"
+              className="bg-[#0b1626] hover:bg-[#12233c] text-white border border-cyan-500/40 px-2.5 py-1.5 rounded-lg text-[11px] font-bold uppercase font-['Oswald'] tracking-wider flex items-center gap-1.5 shrink-0 shadow"
+            >
+              <MessageSquareText className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Soporte</span>
+            </a>
+          </div>
         </div>
 
         {/* Desktop & Tablet View (Intact) */}
@@ -83,8 +107,27 @@ export const Header: React.FC = () => {
             </div>
           </div>
 
-          {/* Direct Support Button */}
-          <div className="flex items-center gap-2">
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2.5">
+            {onOpenCart && (
+              <button
+                type="button"
+                onClick={onOpenCart}
+                aria-label="Abrir carrito de compras"
+                className="bg-[#0b1626]/90 hover:bg-[#12233c] text-white border border-cyan-500/40 hover:border-cyan-400 px-3.5 py-2 rounded-xl text-xs font-bold uppercase font-['Oswald'] tracking-wider transition-all flex items-center gap-2 shadow-lg hover:shadow-cyan-500/20 active:scale-95 cursor-pointer"
+              >
+                <ShoppingCart className="w-4 h-4 text-cyan-400" />
+                <span>Carrito</span>
+                {cartCount > 0 ? (
+                  <span className="bg-emerald-400 text-black font-black text-xs px-2 py-0.5 rounded-full font-mono shadow-md animate-pulse">
+                    {cartCount}
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-slate-400 font-mono">0</span>
+                )}
+              </button>
+            )}
+
             <a
               href={`https://wa.me/${WHATSAPP_NUMBER}`}
               target="_blank"
@@ -101,4 +144,5 @@ export const Header: React.FC = () => {
     </header>
   );
 };
+
 

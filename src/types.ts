@@ -42,3 +42,25 @@ export interface OrderState {
   referenceNumber: string;
   receiptImage: string | null;
 }
+
+export interface CartItem {
+  packageItem: PackageItem;
+  quantity: number;
+}
+
+export interface CartTotals {
+  itemCount: number;
+  distinctCount: number;
+  subtotalBs: number;
+  subtotalUsd: number;
+  discountBs: number;
+  discountUsd: number;
+  totalBs: number;
+  totalUsd: number;
+  formattedSubtotalBs: string;
+  formattedSubtotalUsd: string;
+  formattedDiscountBs: string;
+  formattedDiscountUsd: string;
+  formattedTotalBs: string;
+  formattedTotalUsd: string;
+}

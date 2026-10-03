@@ -1,40 +1,43 @@
 import React from 'react';
-import { PackageItem } from '../types';
-import { calculateEffectivePrice, WHATSAPP_NUMBER } from '../data/packages';
-import { Sparkles, Gamepad2, UserCheck, CreditCard, AlertTriangle, CheckCircle2, MessageSquareText, ArrowRight, ShieldCheck } from 'lucide-react';
+import { PackageItem, CartItem } from '../types';
+import { calculateCartTotals, formatBs, formatUsd, WHATSAPP_NUMBER } from '../data/packages';
+import { Sparkles, Gamepad2, UserCheck, CreditCard, AlertTriangle, CheckCircle2, MessageSquareText, ArrowRight, ShieldCheck, ShoppingCart } from 'lucide-react';
 
 interface OrderSummaryProps {
   playerId: string;
   isVerified?: boolean;
+  playerNickname?: string;
   selectedPackage: PackageItem | null;
+  cart?: CartItem[];
   referenceNumber: string;
   appliedCoupon: { code: string; percent: number } | null;
   stepNumber?: number;
   onToast?: (msg: string, type?: 'success' | 'error' | 'info') => void;
+  onOpenCart?: () => void;
 }
 
 export const OrderSummary: React.FC<OrderSummaryProps> = ({
   playerId,
   isVerified = false,
+  playerNickname = '',
   selectedPackage,
+  cart = [],
   referenceNumber,
   appliedCoupon,
   stepNumber = 4,
   onToast,
+  onOpenCart,
 }) => {
-  const basePriceBs = selectedPackage ? selectedPackage.priceNumeric : 0;
-  const basePriceUsd = selectedPackage ? selectedPackage.priceUsd : 0;
+  const effectiveCart: CartItem[] =
+    cart && cart.length > 0
+      ? cart
+      : selectedPackage
+      ? [{ packageItem: selectedPackage, quantity: 1 }]
+      : [];
+
   const discountPercent = appliedCoupon ? appliedCoupon.percent : 0;
-  const priceInfo = selectedPackage
-    ? calculateEffectivePrice(basePriceBs, basePriceUsd, discountPercent)
-    : {
-        finalBsNumeric: 0,
-        finalUsdNumeric: 0,
-        formattedBs: '0,00 Bs',
-        originalFormattedBs: '0,00 Bs',
-        formattedUsd: '$0.00 USD',
-        originalFormattedUsd: '$0.00 USD',
-      };
+  const totals = calculateCartTotals(effectiveCart, discountPercent);
+  const hasItems = effectiveCart.length > 0;
 
   const handleWhatsAppSend = () => {
     if (!playerId || playerId.trim().length < 5) {
@@ -43,8 +46,8 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
       return;
     }
 
-    if (!selectedPackage) {
-      if (onToast) onToast('Por favor selecciona un paquete de recarga (Paso 2)', 'error');
+    if (!hasItems) {
+      if (onToast) onToast('Por favor selecciona al menos un paquete para tu pedido (Paso 2)', 'error');
       document.getElementById('step-2')?.scrollIntoView({ behavior: 'smooth' });
       return;
     }
@@ -55,18 +58,36 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
       return;
     }
 
-    let mensaje = 
+    let itemsList = '';
+    if (effectiveCart.length === 1 && effectiveCart[0].quantity === 1) {
+      itemsList = `📦 *Producto:* ${effectiveCart[0].packageItem.name}\n`;
+    } else {
+      itemsList =
+        `🛒 *DETALLE DEL PEDIDO (${totals.itemCount} unidades):*\n` +
+        effectiveCart
+          .map(
+            (item) =>
+              `• ${item.quantity}x ${item.packageItem.name} - ${formatBs(
+                item.packageItem.priceNumeric * item.quantity
+              )} (Ref: ${formatUsd(item.packageItem.priceUsd * item.quantity)})`
+          )
+          .join('\n') +
+        `\n━━━━━━━━━━━━━━━━━━━━\n📦 *Total Artículos:* ${totals.itemCount} unidades\n`;
+    }
+
+    let mensaje =
       `⚡ *NUEVA RECARGA - DEATH ZONE* ⚡\n\n` +
       `🎮 *Juego:* Blood Strike\n` +
-      `🆔 *User ID:* ${playerId.trim()}${isVerified ? ' (Verificado ✓)' : ''}\n` +
-      `📦 *Producto:* ${selectedPackage.name}\n` +
+      `🆔 *User ID:* ${playerId.trim()}${playerNickname ? ` (${playerNickname})` : ''}${isVerified ? ' (Verificado ✓)' : ''}\n` +
+      (playerNickname ? `👤 *Jugador:* ${playerNickname}\n` : '') +
+      itemsList +
       `🔢 *N° Referencia / ID:* ${referenceNumber.trim()}\n`;
 
     if (appliedCoupon) {
       mensaje += `🏷️ *Cupón Aplicado:* ${appliedCoupon.code} (-${appliedCoupon.percent}%)\n`;
-      mensaje += `💵 *Precio Bs:* ${priceInfo.formattedBs} (Ref: ${priceInfo.formattedUsd})\n`;
+      mensaje += `💵 *Monto Total:* ${totals.formattedTotalBs} (Ref: ${totals.formattedTotalUsd})\n`;
     } else {
-      mensaje += `💰 *Monto:* ${priceInfo.formattedBs} (Ref: ${priceInfo.formattedUsd})\n`;
+      mensaje += `💰 *Monto Total:* ${totals.formattedTotalBs} (Ref: ${totals.formattedTotalUsd})\n`;
     }
 
     mensaje += `\n📌 *Estado:* Comprobante registrado. Listo para verificación y entrega.`;
@@ -107,44 +128,79 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
           <span className="font-semibold text-slate-100">Blood Strike</span>
         </div>
 
-        {/* Player ID */}
+        {/* Player ID & Nickname */}
         <div className="flex items-center justify-between py-1 border-b border-slate-900/80">
           <span className="text-slate-300 flex items-center gap-1.5 font-medium">
             <UserCheck className="w-3.5 h-3.5 text-cyan-400" /> ID de Usuario:
           </span>
           {playerId ? (
-            <span className="font-mono font-bold text-cyan-200 bg-cyan-950/80 px-2.5 py-0.5 rounded-lg border border-cyan-500/50 flex items-center gap-1.5">
-              {playerId}
-              {isVerified && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
-            </span>
+            <div className="flex flex-col items-end">
+              <span className="font-mono font-bold text-cyan-200 bg-cyan-950/80 px-2.5 py-0.5 rounded-lg border border-cyan-500/50 flex items-center gap-1.5">
+                {playerId}
+                {isVerified && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
+              </span>
+              {playerNickname && (
+                <span className="text-[11px] text-emerald-300 font-bold tracking-wide mt-0.5 flex items-center gap-1">
+                  <span>🎮</span> {playerNickname}
+                </span>
+              )}
+            </div>
           ) : (
             <span className="text-rose-300 italic text-[11px] font-medium">Pendiente en Paso 1...</span>
           )}
         </div>
 
-        {/* Selected Package */}
-        <div className="flex items-center justify-between py-1 border-b border-slate-900/80">
-          <span className="text-slate-300 flex items-center gap-1.5 font-medium">
-            <CreditCard className="w-3.5 h-3.5 text-cyan-400" /> Producto:
-          </span>
-          {selectedPackage ? (
-            <span className="font-bold text-white max-w-[220px] truncate text-right flex items-center justify-end gap-2">
-              {selectedPackage.image && (
-                <img
-                  src={selectedPackage.image}
-                  alt={selectedPackage.name}
-                  width="20"
-                  height="20"
-                  loading="lazy"
-                  decoding="async"
-                  referrerPolicy="no-referrer"
-                  className="w-5 h-5 rounded object-cover border border-white/20 flex-shrink-0"
-                />
-              )}
-              <span>{selectedPackage.name}</span>
+        {/* Products in Cart or Selected Package */}
+        <div className="py-1.5 border-b border-slate-900/80">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-slate-300 flex items-center gap-1.5 font-medium">
+              <ShoppingCart className="w-3.5 h-3.5 text-cyan-400" />
+              <span>{effectiveCart.length > 1 || (effectiveCart[0]?.quantity > 1) ? `Pedido (${totals.itemCount} artículos):` : 'Producto:'}</span>
             </span>
+
+            {onOpenCart && effectiveCart.length > 0 && (
+              <button
+                type="button"
+                onClick={onOpenCart}
+                className="text-[11px] text-cyan-400 hover:text-cyan-300 underline cursor-pointer"
+              >
+                Ver / Modificar Carrito
+              </button>
+            )}
+          </div>
+
+          {effectiveCart.length > 0 ? (
+            <div className="space-y-1.5 mt-1.5">
+              {effectiveCart.map((item) => (
+                <div
+                  key={item.packageItem.id}
+                  className="flex items-center justify-between gap-2 text-xs bg-slate-900/60 p-1.5 sm:p-2 rounded-lg border border-slate-800"
+                >
+                  <div className="flex items-center gap-2 truncate">
+                    {item.packageItem.image ? (
+                      <img
+                        src={item.packageItem.image}
+                        alt={item.packageItem.name}
+                        width="24"
+                        height="24"
+                        className="w-6 h-6 rounded object-cover border border-white/20 shrink-0"
+                      />
+                    ) : (
+                      <span className="text-xs">🪙</span>
+                    )}
+                    <span className="font-semibold text-white truncate">
+                      <span className="text-emerald-400 font-bold font-mono mr-1.5">x{item.quantity}</span>
+                      {item.packageItem.name}
+                    </span>
+                  </div>
+                  <span className="font-mono text-cyan-200 shrink-0 text-right">
+                    {formatBs(item.packageItem.priceNumeric * item.quantity)}
+                  </span>
+                </div>
+              ))}
+            </div>
           ) : (
-            <span className="text-rose-300 italic text-[11px] font-medium">Selecciona un paquete en Paso 2</span>
+            <span className="text-rose-300 italic text-[11px] font-medium">Selecciona al menos un paquete en Paso 2</span>
           )}
         </div>
 
@@ -170,7 +226,7 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
             <span className="flex items-center gap-1 text-[11px]">
               <Sparkles className="w-3 h-3" /> Cupón "{appliedCoupon.code}":
             </span>
-            <span className="font-mono font-bold text-[11px]">-{appliedCoupon.percent}% OFF</span>
+            <span className="font-mono font-bold text-[11px]">-{appliedCoupon.percent}% OFF (-{totals.formattedDiscountBs})</span>
           </div>
         )}
 
@@ -181,17 +237,17 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
             <div className="flex flex-col">
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl font-bold font-['Oswald'] text-emerald-400 tracking-wide">
-                  {selectedPackage ? priceInfo.formattedBs : '0,00 Bs'}
+                  {hasItems ? totals.formattedTotalBs : '0,00 Bs'}
                 </span>
-                {appliedCoupon && selectedPackage && (
+                {appliedCoupon && hasItems && (
                   <span className="text-xs text-slate-300 line-through font-mono">
-                    {priceInfo.originalFormattedBs}
+                    {totals.formattedSubtotalBs}
                   </span>
                 )}
               </div>
-              {selectedPackage && (
+              {hasItems && (
                 <span className="text-xs text-slate-300 font-mono font-medium">
-                  Referencia en Dólares: <strong className="text-slate-100">{priceInfo.formattedUsd}</strong>
+                  Referencia en Dólares: <strong className="text-slate-100">{totals.formattedTotalUsd}</strong>
                 </span>
               )}
             </div>
@@ -209,10 +265,10 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
           <button
             type="button"
             onClick={handleWhatsAppSend}
-            disabled={!playerId || !selectedPackage || !referenceNumber.trim()}
+            disabled={!playerId || !hasItems || !referenceNumber.trim()}
             aria-label="Enviar pedido por WhatsApp al soporte oficial"
             className={`w-full py-3 px-4 rounded-xl font-['Oswald'] uppercase tracking-wider text-sm font-bold transition-all flex items-center justify-center gap-2.5 shadow-xl ${
-              playerId && selectedPackage && referenceNumber.trim()
+              playerId && hasItems && referenceNumber.trim()
                 ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/30 active:scale-[0.99] cursor-pointer'
                 : 'bg-slate-800 text-slate-300 border border-slate-700/60 cursor-not-allowed opacity-80'
             }`}
@@ -230,3 +286,4 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
     </section>
   );
 };
+

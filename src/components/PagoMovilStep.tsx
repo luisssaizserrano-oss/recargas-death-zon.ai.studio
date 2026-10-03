@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { PackageItem } from '../types';
-import { PAYMENT_DETAILS, BINANCE_DETAILS, PAYPAL_DETAILS, WHATSAPP_NUMBER, calculateEffectivePrice } from '../data/packages';
-import { CreditCard, Copy, Check, Building2, Phone, FileText, Hash, AlertCircle, MessageSquareText, ShieldCheck, ArrowRight, Wallet, Mail, UserCheck, HelpCircle } from 'lucide-react';
+import { PackageItem, CartItem } from '../types';
+import { PAYMENT_DETAILS, BINANCE_DETAILS, PAYPAL_DETAILS, WHATSAPP_NUMBER, calculateCartTotals, formatBs, formatUsd } from '../data/packages';
+import { CreditCard, Copy, Check, Building2, Phone, FileText, Hash, AlertCircle, MessageSquareText, ShieldCheck, ArrowRight, Wallet, Mail, UserCheck, HelpCircle, ShoppingCart } from 'lucide-react';
 
 export type PaymentMethod = 'pagomovil' | 'binance' | 'paypal';
 
@@ -9,22 +9,26 @@ interface PagoMovilStepProps {
   playerId: string;
   isVerified?: boolean;
   selectedPackage: PackageItem | null;
+  cart?: CartItem[];
   referenceNumber: string;
   setReferenceNumber: (ref: string) => void;
   appliedCoupon: { code: string; percent: number } | null;
   onToast: (msg: string, type?: 'success' | 'error' | 'info') => void;
   stepNumber?: number;
+  onOpenCart?: () => void;
 }
 
 export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
   playerId,
   isVerified = false,
   selectedPackage,
+  cart = [],
   referenceNumber,
   setReferenceNumber,
   appliedCoupon,
   onToast,
   stepNumber = 3,
+  onOpenCart,
 }) => {
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('pagomovil');
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -63,12 +67,16 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
     copyToClipboard(fullText, `Datos de ${selectedMethod === 'pagomovil' ? 'Pago Móvil' : selectedMethod === 'binance' ? 'Binance' : 'PayPal'}`);
   };
 
-  const basePriceBs = selectedPackage ? selectedPackage.priceNumeric : 0;
-  const basePriceUsd = selectedPackage ? selectedPackage.priceUsd : 0;
+  const effectiveCart: CartItem[] =
+    cart && cart.length > 0
+      ? cart
+      : selectedPackage
+      ? [{ packageItem: selectedPackage, quantity: 1 }]
+      : [];
+
   const discountPercent = appliedCoupon ? appliedCoupon.percent : 0;
-  const priceInfo = selectedPackage 
-    ? calculateEffectivePrice(basePriceBs, basePriceUsd, discountPercent)
-    : { finalBsNumeric: 0, finalUsdNumeric: 0, formattedBs: '0,00 Bs', originalFormattedBs: '0,00 Bs', formattedUsd: '$0.00 USD', originalFormattedUsd: '$0.00 USD' };
+  const totals = calculateCartTotals(effectiveCart, discountPercent);
+  const hasItems = effectiveCart.length > 0;
 
   const handleWhatsAppCheckout = () => {
     if (!playerId || playerId.trim().length < 5) {
@@ -76,8 +84,8 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
       return;
     }
 
-    if (!selectedPackage) {
-      onToast('Por favor selecciona un paquete de recarga (Paso 2)', 'error');
+    if (!hasItems) {
+      onToast('Por favor selecciona al menos un paquete de recarga (Paso 2)', 'error');
       return;
     }
 
@@ -88,19 +96,36 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
 
     const methodName = selectedMethod === 'pagomovil' ? 'Pago Móvil' : selectedMethod === 'binance' ? 'Binance Pay' : 'PayPal';
 
+    let itemsList = '';
+    if (effectiveCart.length === 1 && effectiveCart[0].quantity === 1) {
+      itemsList = `📦 *Producto:* ${effectiveCart[0].packageItem.name}\n`;
+    } else {
+      itemsList =
+        `🛒 *DETALLE DEL PEDIDO (${totals.itemCount} unidades):*\n` +
+        effectiveCart
+          .map(
+            (item) =>
+              `• ${item.quantity}x ${item.packageItem.name} - ${formatBs(
+                item.packageItem.priceNumeric * item.quantity
+              )} (Ref: ${formatUsd(item.packageItem.priceUsd * item.quantity)})`
+          )
+          .join('\n') +
+        `\n━━━━━━━━━━━━━━━━━━━━\n📦 *Total Artículos:* ${totals.itemCount} unidades\n`;
+    }
+
     let mensaje = 
       `⚡ *NUEVA RECARGA - DEATH ZONE* ⚡\n\n` +
       `🎮 *Juego:* Blood Strike\n` +
       `🆔 *User ID:* ${playerId.trim()}${isVerified ? ' (Verificado ✓)' : ''}\n` +
-      `📦 *Producto:* ${selectedPackage.name}\n` +
+      itemsList +
       `💳 *Método de Pago:* ${methodName}\n` +
       `🔢 *N° Referencia / ID:* ${referenceNumber.trim()}\n`;
 
     if (appliedCoupon) {
       mensaje += `🏷️ *Cupón Aplicado:* ${appliedCoupon.code} (-${appliedCoupon.percent}%)\n`;
-      mensaje += `💵 *Precio Bs:* ${priceInfo.formattedBs} (Ref: ${priceInfo.formattedUsd})\n`;
+      mensaje += `💵 *Monto Total:* ${totals.formattedTotalBs} (Ref: ${totals.formattedTotalUsd})\n`;
     } else {
-      mensaje += `💰 *Monto:* ${priceInfo.formattedBs} (Ref: ${priceInfo.formattedUsd})\n`;
+      mensaje += `💰 *Monto Total:* ${totals.formattedTotalBs} (Ref: ${totals.formattedTotalUsd})\n`;
     }
 
     mensaje += `\n📌 *Estado:* Pago realizado por ${methodName}. Listo para verificación y entrega.`;
@@ -126,6 +151,41 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
           <p className="text-[11px] sm:text-xs text-slate-300 hidden xs:block">Selecciona tu método de pago y registra tu comprobante</p>
         </div>
       </div>
+
+      {/* Cart Summary Banner */}
+      {hasItems && (
+        <div className="bg-[#040812] border border-cyan-500/30 rounded-xl p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-inner">
+          <div className="flex items-center gap-2.5">
+            <span className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+              <ShoppingCart className="w-4 h-4" />
+            </span>
+            <div>
+              <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">
+                Monto Exacto a Transferir ({totals.itemCount} {totals.itemCount === 1 ? 'artículo' : 'artículos'}):
+              </span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-xl sm:text-2xl font-bold font-['Oswald'] text-emerald-400 tracking-wide">
+                  {totals.formattedTotalBs}
+                </span>
+                <span className="text-xs text-slate-300 font-mono">
+                  (Ref: {totals.formattedTotalUsd})
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {onOpenCart && effectiveCart.length > 0 && (
+            <button
+              type="button"
+              onClick={onOpenCart}
+              className="text-xs text-cyan-400 hover:text-cyan-300 font-bold font-['Oswald'] uppercase tracking-wider flex items-center gap-1 cursor-pointer ml-auto sm:ml-0 px-2.5 py-1 rounded-lg bg-cyan-950/40 border border-cyan-500/30 hover:bg-cyan-900/40 transition-colors"
+            >
+              <span>Ver Carrito</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Payment Method Selector Tabs */}
       <div className="grid grid-cols-3 gap-1 sm:gap-1.5 p-1 bg-[#040812] border border-slate-700 rounded-xl">
@@ -352,7 +412,7 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
           </div>
 
           <p className="text-[11px] text-blue-200 bg-blue-950/60 p-2 rounded-lg border border-blue-500/40">
-            💡 Envía el monto equivalente en USD ({priceInfo.formattedUsd}) a nuestra cuenta PayPal e ingresa tu ID de transacción.
+            💡 Envía el monto equivalente en USD ({totals.formattedTotalUsd}) a nuestra cuenta PayPal e ingresa tu ID de transacción.
           </p>
         </div>
       )}
@@ -425,10 +485,10 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
       <button
         type="button"
         onClick={handleWhatsAppCheckout}
-        disabled={!playerId || !selectedPackage || !referenceNumber.trim()}
+        disabled={!playerId || !hasItems || !referenceNumber.trim()}
         aria-label="Enviar comprobante de pago por WhatsApp"
         className={`w-full py-3 px-4 rounded-xl font-['Oswald'] uppercase tracking-wider text-sm font-bold transition-all flex items-center justify-center gap-2.5 shadow-xl ${
-          playerId && selectedPackage && referenceNumber.trim()
+          playerId && hasItems && referenceNumber.trim()
             ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/30 active:scale-[0.99] cursor-pointer'
             : 'bg-slate-800 text-slate-300 border border-slate-700/60 cursor-not-allowed opacity-80'
         }`}

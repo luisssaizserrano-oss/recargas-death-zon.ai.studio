@@ -1,21 +1,31 @@
 import React, { useState } from 'react';
-import { PackageCategory, PackageItem } from '../types';
+import { PackageCategory, PackageItem, CartItem } from '../types';
 import { PACKAGES, calculateEffectivePrice } from '../data/packages';
-import { Search, Tag, Sparkles } from 'lucide-react';
+import { Search, Tag, Sparkles, ShoppingCart, Plus, Minus, ArrowRight } from 'lucide-react';
 
 interface PackageGridProps {
   selectedPackage: PackageItem | null;
   onSelectPackage: (pkg: PackageItem) => void;
   appliedCoupon: { code: string; percent: number } | null;
+  cart?: CartItem[];
+  onAddToCart?: (pkg: PackageItem, quantity?: number) => void;
+  onUpdateQuantity?: (pkgId: string, quantity: number) => void;
+  onOpenCart?: () => void;
 }
 
 export const PackageGrid: React.FC<PackageGridProps> = ({
   selectedPackage,
   onSelectPackage,
   appliedCoupon,
+  cart = [],
+  onAddToCart,
+  onUpdateQuantity,
+  onOpenCart,
 }) => {
   const [activeTab, setActiveTab] = useState<PackageCategory | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+
+  const totalCartUnits = cart.reduce((acc, curr) => acc + curr.quantity, 0);
 
   const filteredPackages = PACKAGES.filter((pkg) => {
     const matchesCategory = activeTab === 'all' || pkg.category === activeTab;
@@ -139,8 +149,74 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
     );
   };
 
+  const renderCartAction = (pkg: PackageItem) => {
+    const itemInCart = cart.find((c) => c.packageItem.id === pkg.id);
+    const quantity = itemInCart ? itemInCart.quantity : 0;
+
+    if (quantity > 0) {
+      return (
+        <div
+          className="w-full mt-2.5 pt-2 border-t border-white/10 flex items-center justify-between gap-1.5"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            onClick={() => onUpdateQuantity && onUpdateQuantity(pkg.id, quantity - 1)}
+            aria-label={`Quitar una unidad de ${pkg.name}`}
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-800 hover:bg-slate-700 active:bg-slate-900 text-slate-200 hover:text-white flex items-center justify-center transition-colors cursor-pointer border border-slate-700/80 active:scale-95"
+          >
+            <Minus className="w-3.5 h-3.5" />
+          </button>
+
+          <div className="flex-1 text-center">
+            <span className="text-xs sm:text-sm font-bold text-cyan-300 font-mono block leading-none">
+              {quantity} {quantity === 1 ? 'unidad' : 'unidades'}
+            </span>
+            <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider block mt-0.5">
+              En Carrito
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => onUpdateQuantity && onUpdateQuantity(pkg.id, quantity + 1)}
+            aria-label={`Agregar otra unidad de ${pkg.name}`}
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-cyan-500 hover:bg-cyan-400 active:bg-cyan-600 text-black font-bold flex items-center justify-center transition-colors cursor-pointer border border-cyan-400 shadow-md shadow-cyan-500/20 active:scale-95"
+          >
+            <Plus className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <div
+        className="w-full mt-2.5 pt-2 border-t border-white/10"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={() => {
+            if (onAddToCart) {
+              onAddToCart(pkg, 1);
+            } else {
+              onSelectPackage(pkg);
+            }
+          }}
+          aria-label={`Agregar ${pkg.name} al carrito`}
+          className="w-full py-1.5 px-2 rounded-xl text-[11px] sm:text-xs font-['Oswald'] uppercase font-bold tracking-wider bg-slate-800/90 hover:bg-cyan-500 hover:text-black text-cyan-300 border border-cyan-500/40 hover:border-cyan-400 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm group/btn active:scale-95"
+        >
+          <ShoppingCart className="w-3.5 h-3.5 text-cyan-400 group-hover/btn:text-black transition-colors" />
+          <span>+ Agregar al Carrito</span>
+        </button>
+      </div>
+    );
+  };
+
   const renderProductCard = (pkg: PackageItem) => {
-    const isSelected = selectedPackage?.id === pkg.id;
+    const itemInCart = cart.find((c) => c.packageItem.id === pkg.id);
+    const quantityInCart = itemInCart ? itemInCart.quantity : 0;
+    const isSelected = selectedPackage?.id === pkg.id || quantityInCart > 0;
     const discountPercent = appliedCoupon ? appliedCoupon.percent : 0;
     const priceInfo = calculateEffectivePrice(pkg.priceNumeric, pkg.priceUsd, discountPercent);
 
@@ -161,7 +237,14 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
           onClick={() => onSelectPackage(pkg)}
           className={`product-card card-gold ${isSelected ? 'card-selected' : ''}`}
         >
-          {isSelected && <div className="selected-check-badge">✓</div>}
+          {quantityInCart > 0 ? (
+            <div className="selected-check-badge !w-auto !h-auto px-2 py-0.5 rounded-full flex items-center gap-1 bg-emerald-400 text-black font-extrabold text-[10px] shadow-lg shadow-emerald-500/40">
+              <span>✓</span>
+              <span className="font-mono">x{quantityInCart}</span>
+            </div>
+          ) : isSelected ? (
+            <div className="selected-check-badge">✓</div>
+          ) : null}
           {renderGoldSvg(pkg.id)}
           <h4 className="gold-qty">{pkg.amountLabel || pkg.name}</h4>
           <span className="badge-bonus">{pkg.bonusBadge || '+BONUS'}</span>
@@ -174,6 +257,7 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
             <div className="bs-price">{priceInfo.formattedBs}</div>
             <div className="usd-ref">Ref: {priceInfo.formattedUsd}</div>
           </div>
+          {renderCartAction(pkg)}
         </div>
       );
     }
@@ -195,7 +279,14 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
           onClick={() => onSelectPackage(pkg)}
           className={`product-card card-levelup ${isSelected ? 'card-selected' : ''}`}
         >
-          {isSelected && <div className="selected-check-badge">✓</div>}
+          {quantityInCart > 0 ? (
+            <div className="selected-check-badge !w-auto !h-auto px-2 py-0.5 rounded-full flex items-center gap-1 bg-emerald-400 text-black font-extrabold text-[10px] shadow-lg shadow-emerald-500/40">
+              <span>✓</span>
+              <span className="font-mono">x{quantityInCart}</span>
+            </div>
+          ) : isSelected ? (
+            <div className="selected-check-badge">✓</div>
+          ) : null}
           <span className="pass-badge" style={{ background: 'var(--purple-pass)' }}>
             {pkg.passBadge || 'PROGRESO'}
           </span>
@@ -231,6 +322,7 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
             <div className="bs-price">{priceInfo.formattedBs}</div>
             <div className="usd-ref">Ref: {priceInfo.formattedUsd}</div>
           </div>
+          {renderCartAction(pkg)}
         </div>
       );
     }
@@ -266,7 +358,14 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
         onClick={() => onSelectPackage(pkg)}
         className={`product-card ${cardClass} ${isSelected ? 'card-selected' : ''}`}
       >
-        {isSelected && <div className="selected-check-badge">✓</div>}
+        {quantityInCart > 0 ? (
+          <div className="selected-check-badge !w-auto !h-auto px-2 py-0.5 rounded-full flex items-center gap-1 bg-emerald-400 text-black font-extrabold text-[10px] shadow-lg shadow-emerald-500/40">
+            <span>✓</span>
+            <span className="font-mono">x{quantityInCart}</span>
+          </div>
+        ) : isSelected ? (
+          <div className="selected-check-badge">✓</div>
+        ) : null}
         <span
           className="pass-badge"
           style={
@@ -334,6 +433,7 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
           <div className="bs-price">{priceInfo.formattedBs}</div>
           <div className="usd-ref">Ref: {priceInfo.formattedUsd}</div>
         </div>
+        {renderCartAction(pkg)}
       </div>
     );
   };
@@ -363,26 +463,41 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
             </div>
           </div>
 
-          {/* Search Input */}
-          <div className="relative w-full sm:w-56">
-            <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-300 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Buscar paquete..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 sm:pl-9 pr-7 py-1.5 sm:py-2 bg-[#060a12] border border-white/10 rounded-xl text-xs text-white placeholder-slate-400 focus:outline-none focus:border-[#ffb703] transition-colors"
-            />
-            {searchQuery && (
+          {/* Search Input & Quick Cart Button */}
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            {onOpenCart && totalCartUnits > 0 && (
               <button
                 type="button"
-                onClick={() => setSearchQuery('')}
-                aria-label="Borrar texto de búsqueda de paquetes"
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-300 hover:text-white text-xs"
+                onClick={onOpenCart}
+                aria-label="Ver productos en el carrito de compras"
+                className="bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 hover:from-emerald-500/30 hover:to-cyan-500/30 border border-emerald-500/50 hover:border-emerald-400 text-emerald-300 text-xs font-['Oswald'] uppercase font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-md shadow-emerald-500/10 transition-all cursor-pointer shrink-0"
               >
-                ✕
+                <ShoppingCart className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Carrito ({totalCartUnits})</span>
+                <ArrowRight className="w-3.5 h-3.5 text-emerald-400" />
               </button>
             )}
+
+            <div className="relative flex-1 sm:w-56">
+              <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-300 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Buscar paquete..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-8 sm:pl-9 pr-7 py-1.5 sm:py-2 bg-[#060a12] border border-white/10 rounded-xl text-xs text-white placeholder-slate-400 focus:outline-none focus:border-[#ffb703] transition-colors"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  aria-label="Borrar texto de búsqueda de paquetes"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-300 hover:text-white text-xs"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
           </div>
         </div>
 

@@ -1,4 +1,4 @@
-import { PackageItem, PaymentInfo, BinancePaymentInfo, PaypalPaymentInfo } from '../types';
+import { PackageItem, PaymentInfo, BinancePaymentInfo, PaypalPaymentInfo, CartItem, CartTotals } from '../types';
 import strikePassEliteImg from '../assets/images/strike_pass_elite.webp';
 import strikePassPremiumImg from '../assets/images/strike_pass_premium.webp';
 import levelUpPassImg from '../assets/images/level_up_pass.webp';
@@ -65,6 +65,44 @@ export function calculateEffectivePrice(
     originalFormattedBs: formatBs(basePriceNumericBs),
     formattedUsd: formatUsd(discountedUsd),
     originalFormattedUsd: formatUsd(basePriceNumericUsd),
+  };
+}
+
+export function calculateCartTotals(
+  cart: CartItem[],
+  discountPercent: number = 0
+): CartTotals {
+  let subtotalBs = 0;
+  let subtotalUsd = 0;
+  let itemCount = 0;
+
+  for (const item of cart) {
+    const qty = Math.max(1, item.quantity);
+    itemCount += qty;
+    subtotalBs += item.packageItem.priceNumeric * qty;
+    subtotalUsd += item.packageItem.priceUsd * qty;
+  }
+
+  const discountBs = (subtotalBs * discountPercent) / 100;
+  const discountUsd = (subtotalUsd * discountPercent) / 100;
+  const totalBs = Math.max(0, subtotalBs - discountBs);
+  const totalUsd = Math.max(0, subtotalUsd - discountUsd);
+
+  return {
+    itemCount,
+    distinctCount: cart.length,
+    subtotalBs,
+    subtotalUsd,
+    discountBs,
+    discountUsd,
+    totalBs,
+    totalUsd,
+    formattedSubtotalBs: formatBs(subtotalBs),
+    formattedSubtotalUsd: formatUsd(subtotalUsd),
+    formattedDiscountBs: formatBs(discountBs),
+    formattedDiscountUsd: formatUsd(discountUsd),
+    formattedTotalBs: formatBs(totalBs),
+    formattedTotalUsd: formatUsd(totalUsd),
   };
 }
 
