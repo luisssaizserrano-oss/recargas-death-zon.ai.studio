@@ -291,7 +291,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 onClick={() => {
                   if (!isVerified) {
                     if (onToast) {
-                      onToast('ID Inválido o Error de Token. Verifica tu ID de Blood Strike antes de continuar.', 'error');
+                      onToast('Por favor verifica tu ID de usuario primero en el Paso 1.', 'info');
                     }
                     onClose();
                     document.getElementById('step-1')?.scrollIntoView({ behavior: 'smooth' });

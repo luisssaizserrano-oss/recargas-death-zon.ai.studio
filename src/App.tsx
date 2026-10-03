@@ -89,7 +89,7 @@ export default function App() {
 
   const handleSelectPackage = (pkg: PackageItem) => {
     if (!isVerified) {
-      showToast('ID Inválido o Error de Token. Por favor verifica tu ID primero.', 'error');
+      showToast('Por favor verifica tu ID de usuario primero en el Paso 1.', 'info');
       document.getElementById('step-1')?.scrollIntoView({ behavior: 'smooth' });
       return;
     }
@@ -117,7 +117,7 @@ export default function App() {
 
   const handleAddToCart = (pkg: PackageItem, quantity: number = 1) => {
     if (!isVerified) {
-      showToast('ID Inválido o Error de Token. Por favor verifica tu ID primero.', 'error');
+      showToast('Por favor verifica tu ID de usuario primero en el Paso 1.', 'info');
       document.getElementById('step-1')?.scrollIntoView({ behavior: 'smooth' });
       return;
     }

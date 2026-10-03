@@ -53,7 +53,7 @@ export const UserIdModal: React.FC<UserIdModalProps> = ({ isOpen, onClose }) => 
 
           <div className="flex items-start gap-3 p-3 bg-[#050b14] border border-slate-800 rounded-xl">
             <span className="flex items-center justify-center w-6 h-6 rounded-full bg-cyan-500 text-black font-bold text-xs shrink-0 mt-0.5">3</span>
-            <p>En la pestaña de resumen de tu cuenta verás tu <strong className="text-cyan-400 font-mono">User ID (ej. 1234567890)</strong>. Toca el botón de copiar junto al número.</p>
+            <p>En la pestaña de resumen de tu cuenta verás tu <strong className="text-cyan-400 font-mono">User ID de 12 dígitos (ej. 109847562301)</strong>. Toca el botón de copiar junto al número.</p>
           </div>
 
           {/* Visual ID Box Mockup */}
@@ -61,7 +61,7 @@ export const UserIdModal: React.FC<UserIdModalProps> = ({ isOpen, onClose }) => 
             <span className="text-[10px] uppercase tracking-widest text-slate-300">Ejemplo de ID en el Juego</span>
             <div className="font-mono text-lg font-bold text-cyan-400 bg-[#020610] py-2 px-4 rounded-lg border border-cyan-500/20 inline-flex items-center gap-2">
               <UserCheck className="w-4 h-4 text-emerald-400" />
-              <span>1098475623</span>
+              <span>109847562301</span>
             </div>
           </div>
 

@@ -78,8 +78,7 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
     let mensaje =
       `⚡ *NUEVA RECARGA - DEATH ZONE* ⚡\n\n` +
       `🎮 *Juego:* Blood Strike\n` +
-      `🆔 *User ID:* ${playerId.trim()}${playerNickname ? ` (${playerNickname})` : ''}${isVerified ? ' (Verificado ✓)' : ''}\n` +
-      (playerNickname ? `👤 *Jugador:* ${playerNickname}\n` : '') +
+      `🆔 *User ID:* ${playerId.trim()}${isVerified ? ' (Verificado ✓)' : ''}\n` +
       itemsList +
       `🔢 *N° Referencia / ID:* ${referenceNumber.trim()}\n`;
 
@@ -139,11 +138,6 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
                 {playerId}
                 {isVerified && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
               </span>
-              {playerNickname && (
-                <span className="text-[11px] text-emerald-300 font-bold tracking-wide mt-0.5 flex items-center gap-1">
-                  <span>🎮</span> {playerNickname}
-                </span>
-              )}
             </div>
           ) : (
             <span className="text-rose-300 italic text-[11px] font-medium">Pendiente en Paso 1...</span>
