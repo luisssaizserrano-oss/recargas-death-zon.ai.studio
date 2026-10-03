@@ -6,7 +6,7 @@ import { CouponSection } from './components/CouponSection';
 import { PackageGrid } from './components/PackageGrid';
 import { CartDrawer } from './components/CartDrawer';
 import { Toast } from './components/Toast';
-import { VALID_COUPONS, calculateCartTotals, formatBs, formatUsd, WHATSAPP_NUMBER } from './data/packages';
+import { VALID_COUPONS, calculateCartTotals, formatBs, formatUsd, WHATSAPP_NUMBER, getPackageCartLimit } from './data/packages';
 import { Gamepad2, ShieldCheck, MessageSquareText, Clock, Headphones, CheckCircle2, ArrowRight, ShoppingCart } from 'lucide-react';
 
 // Lazy load non-critical components to minimize initial JS payload, prevent request chaining and improve LCP
@@ -29,7 +29,14 @@ export default function App() {
         if (saved) {
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed;
+            // Clampear cantidades con los límites oficiales (máx 1 en pases/cofres, máx 10 en oro)
+            return parsed.map((item: CartItem) => {
+              const maxLimit = getPackageCartLimit(item.packageItem);
+              return {
+                ...item,
+                quantity: Math.min(maxLimit, Math.max(1, item.quantity)),
+              };
+            });
           }
         }
       } catch {
@@ -81,6 +88,22 @@ export default function App() {
   };
 
   const handleSelectPackage = (pkg: PackageItem) => {
+    if (!isVerified) {
+      showToast('ID Inválido o Error de Token. Por favor verifica tu ID primero.', 'error');
+      document.getElementById('step-1')?.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+    const limit = getPackageCartLimit(pkg);
+    const existing = cart.find((item) => item.packageItem.id === pkg.id);
+    if (existing && existing.quantity >= limit) {
+      if (limit === 1) {
+        showToast(`Ya tienes "${pkg.name}" en el carrito (límite máximo: 1 por pedido)`, 'info');
+      } else {
+        showToast(`Ya tienes el límite máximo (${limit} unidades) de "${pkg.name}"`, 'info');
+      }
+      setSelectedPackage(pkg);
+      return;
+    }
     setSelectedPackage(pkg);
     setCart((prev) => {
       const exists = prev.some((item) => item.packageItem.id === pkg.id);
@@ -93,6 +116,26 @@ export default function App() {
   };
 
   const handleAddToCart = (pkg: PackageItem, quantity: number = 1) => {
+    if (!isVerified) {
+      showToast('ID Inválido o Error de Token. Por favor verifica tu ID primero.', 'error');
+      document.getElementById('step-1')?.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+
+    const limit = getPackageCartLimit(pkg);
+    const existing = cart.find((item) => item.packageItem.id === pkg.id);
+    const currentQty = existing ? existing.quantity : 0;
+
+    if (currentQty >= limit) {
+      if (limit === 1) {
+        showToast(`⚠️ Límite alcanzado: solo se permite 1 ${pkg.name} por pedido.`, 'error');
+      } else {
+        showToast(`⚠️ Límite alcanzado: máximo ${limit} unidades de Oro por pedido.`, 'error');
+      }
+      return;
+    }
+
+    const newQty = Math.min(limit, currentQty + quantity);
     setSelectedPackage(pkg);
     setCart((prev) => {
       const existingIndex = prev.findIndex((item) => item.packageItem.id === pkg.id);
@@ -100,13 +143,18 @@ export default function App() {
         const copy = [...prev];
         copy[existingIndex] = {
           ...copy[existingIndex],
-          quantity: copy[existingIndex].quantity + quantity,
+          quantity: newQty,
         };
         return copy;
       }
-      return [...prev, { packageItem: pkg, quantity }];
+      return [...prev, { packageItem: pkg, quantity: newQty }];
     });
-    showToast(`¡${pkg.name} agregado al carrito!`, 'success');
+
+    if (limit === 1) {
+      showToast(`¡${pkg.name} agregado al carrito! (Límite: 1)`, 'success');
+    } else {
+      showToast(`¡${pkg.name} agregado al carrito! (${newQty}/${limit})`, 'success');
+    }
   };
 
   const handleUpdateQuantity = (pkgId: string, quantity: number) => {
@@ -114,6 +162,20 @@ export default function App() {
       handleRemoveFromCart(pkgId);
       return;
     }
+
+    const targetItem = cart.find((item) => item.packageItem.id === pkgId);
+    if (targetItem) {
+      const limit = getPackageCartLimit(targetItem.packageItem);
+      if (quantity > limit) {
+        if (limit === 1) {
+          showToast(`⚠️ Límite alcanzado: solo se permite 1 unidad de ${targetItem.packageItem.name} por pedido.`, 'error');
+        } else {
+          showToast(`⚠️ Límite alcanzado: máximo ${limit} unidades de este paquete de Oro por pedido.`, 'error');
+        }
+        return;
+      }
+    }
+
     setCart((prev) =>
       prev.map((item) =>
         item.packageItem.id === pkgId ? { ...item, quantity } : item
@@ -213,6 +275,8 @@ export default function App() {
           onRemoveItem={handleRemoveFromCart}
           onClearCart={handleClearCart}
           appliedCoupon={appliedCoupon}
+          isVerified={isVerified}
+          onToast={showToast}
           onProceedToCheckout={() => {
             const step3 = document.getElementById('step-3');
             if (step3) {
@@ -317,6 +381,8 @@ export default function App() {
             onAddToCart={handleAddToCart}
             onUpdateQuantity={handleUpdateQuantity}
             onOpenCart={() => setIsCartOpen(true)}
+            isVerified={isVerified}
+            onToast={showToast}
           />
 
           {/* 3. Métodos de Pago & Registro de Referencia */}

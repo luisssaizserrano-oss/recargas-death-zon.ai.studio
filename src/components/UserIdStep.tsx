@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { User, HelpCircle, CheckCircle2, History, Trash2, ShieldCheck, Loader2, Sparkles } from 'lucide-react';
-import { validarIdGame } from '../services/vothApi';
+import { User, HelpCircle, CheckCircle2, History, Trash2, ShieldCheck, Loader2, Sparkles, AlertTriangle } from 'lucide-react';
+import { verificarIdBloodStrike } from '../services/vothApi';
 
 interface UserIdStepProps {
   playerId: string;
@@ -25,6 +25,8 @@ export const UserIdStep: React.FC<UserIdStepProps> = ({
 }) => {
   const [recentIds, setRecentIds] = useState<string[]>([]);
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
+  const [statusMessage, setStatusMessage] = useState<string>('');
+  const [statusColor, setStatusColor] = useState<'green' | 'red' | 'orange' | 'default'>('default');
 
   // Load saved IDs on mount
   useEffect(() => {
@@ -47,6 +49,23 @@ export const UserIdStep: React.FC<UserIdStepProps> = ({
     if (playerNickname && setPlayerNickname) {
       setPlayerNickname('');
     }
+    if (statusMessage) {
+      setStatusMessage('');
+      setStatusColor('default');
+      const statusEl = document.getElementById('status-id');
+      if (statusEl) {
+        statusEl.style.color = '';
+        statusEl.innerText = '';
+      }
+      const btnCart = document.getElementById('btn-agregar-carrito') as HTMLButtonElement | null;
+      if (btnCart) {
+        btnCart.disabled = true;
+      }
+      const allCartBtns = document.querySelectorAll<HTMLButtonElement>('[data-btn-agregar-carrito]');
+      allCartBtns.forEach((btn) => {
+        btn.disabled = true;
+      });
+    }
   };
 
   const handleSaveId = (idToSave: string) => {
@@ -62,36 +81,59 @@ export const UserIdStep: React.FC<UserIdStepProps> = ({
 
   const handleVerifyPlayer = async () => {
     if (!playerId || playerId.length < 5) {
-      onToast('Por favor ingresa un ID válido (mínimo 5 dígitos)', 'error');
+      const errMsg = 'ID Inválido o Error de Token';
+      setStatusColor('red');
+      setStatusMessage(`❌ Error: ${errMsg}`);
+      setIsVerified(false);
+      onToast(errMsg, 'error');
+      const statusEl = document.getElementById('status-id');
+      if (statusEl) {
+        statusEl.style.color = 'red';
+        statusEl.innerText = `❌ Error: ${errMsg}`;
+      }
+      const btnCart = document.getElementById('btn-agregar-carrito') as HTMLButtonElement | null;
+      if (btnCart) {
+        btnCart.disabled = true;
+      }
       return;
     }
 
     setIsVerifying(true);
-    setIsVerified(false);
+    setStatusColor('orange');
+    setStatusMessage('⏳ Verificando ID en servidores de NetEase...');
 
     try {
-      const resultado = await validarIdGame(playerId);
+      const resultado = await verificarIdBloodStrike(playerId);
 
       if (resultado.success && resultado.valid) {
-        // ÉXITO: El ID existe y te devuelve el nombre del personaje
+        // ÉXITO: El ID es válido
         setIsVerified(true);
+        setStatusColor('green');
+        const successText = 'ID verificado correctamente ✅';
+        setStatusMessage(successText);
         if (setPlayerNickname) {
           setPlayerNickname(resultado.nickname || '');
         }
         handleSaveId(playerId);
-        onToast(`Jugador encontrado: ${resultado.nickname || 'Cuenta Verificada'}`, 'success');
+        onToast('ID verificado correctamente', 'success');
       } else {
-        // ERROR: El ID no se encuentra en los servidores de NetEase
+        // ERROR: 400, 401 o ID no encontrado en servidores de NetEase
         setIsVerified(false);
+        setStatusColor('red');
+        const errText = resultado.statusMessage || '❌ Error: ID Inválido o Error de Token';
+        setStatusMessage(errText);
         if (setPlayerNickname) {
           setPlayerNickname('');
         }
-        onToast(resultado.error || 'ID Inválido. Por favor verifica tus datos.', 'error');
+        onToast('ID Inválido o Error de Token', 'error');
       }
     } catch (error) {
       console.error('Error en la conexión de la API de validación:', error);
       setIsVerified(false);
-      onToast('Error temporal del sistema. Intenta de nuevo.', 'error');
+      setStatusColor('orange');
+      const connErr = '⚠️ Error de conexión con el servidor. Verifica tus variables de entorno.';
+      setStatusMessage(connErr);
+      onToast(connErr, 'error');
     } finally {
       setIsVerifying(false);
     }
@@ -100,20 +142,32 @@ export const UserIdStep: React.FC<UserIdStepProps> = ({
   const handleSelectRecent = async (id: string) => {
     setPlayerId(id);
     setIsVerifying(true);
-    setIsVerified(false);
+    setStatusColor('orange');
+    setStatusMessage('⏳ Verificando ID en servidores de NetEase...');
     try {
-      const resultado = await validarIdGame(id);
+      const resultado = await verificarIdBloodStrike(id);
       if (resultado.success && resultado.valid) {
         setIsVerified(true);
+        setStatusColor('green');
+        const successText = 'ID verificado correctamente ✅';
+        setStatusMessage(successText);
         if (setPlayerNickname) {
           setPlayerNickname(resultado.nickname || '');
         }
-        onToast(`Jugador encontrado: ${resultado.nickname || id}`, 'success');
+        onToast('ID verificado correctamente', 'success');
       } else {
-        onToast(resultado.error || 'ID Inválido. Por favor verifica tus datos.', 'error');
+        setIsVerified(false);
+        setStatusColor('red');
+        const errText = resultado.statusMessage || '❌ Error: ID Inválido o Error de Token';
+        setStatusMessage(errText);
+        onToast('ID Inválido o Error de Token', 'error');
       }
     } catch {
-      onToast('Error temporal del sistema. Intenta de nuevo.', 'error');
+      setIsVerified(false);
+      setStatusColor('orange');
+      const connErr = '⚠️ Error de conexión con el servidor. Verifica tus variables de entorno.';
+      setStatusMessage(connErr);
+      onToast(connErr, 'error');
     } finally {
       setIsVerifying(false);
     }
@@ -143,20 +197,22 @@ export const UserIdStep: React.FC<UserIdStepProps> = ({
             <h2 className="font-['Oswald'] text-sm sm:text-lg uppercase tracking-wider text-white flex items-center gap-1.5 leading-tight">
               Ingresa tu ID de Usuario
             </h2>
-            <p className="text-[11px] sm:text-xs text-slate-300 hidden xs:block">Verifica tu cuenta de Blood Strike para recargar</p>
+            <p className="text-[11px] sm:text-xs text-slate-300 hidden xs:block">Ingresa tu ID de jugador para recargar en Blood Strike</p>
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={onOpenGuide}
-          aria-label="¿Dónde encuentro mi User ID? Ver guía paso a paso"
-          className="inline-flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-xs font-semibold text-cyan-300 hover:text-cyan-200 bg-cyan-950/60 hover:bg-cyan-900/70 border border-cyan-500/40 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl transition-all shrink-0 shadow-sm"
-        >
-          <HelpCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-          <span className="hidden xs:inline">¿Dónde está mi ID?</span>
-          <span className="xs:hidden">Ayuda</span>
-        </button>
+        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+          <button
+            type="button"
+            onClick={onOpenGuide}
+            aria-label="¿Dónde encuentro mi User ID? Ver guía paso a paso"
+            className="inline-flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-xs font-semibold text-cyan-300 hover:text-cyan-200 bg-cyan-950/60 hover:bg-cyan-900/70 border border-cyan-500/40 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl transition-all shrink-0 shadow-sm"
+          >
+            <HelpCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+            <span className="hidden xs:inline">¿Dónde está mi ID?</span>
+            <span className="xs:hidden">Ayuda</span>
+          </button>
+        </div>
       </div>
 
       {/* Input Field + Verify Button */}
@@ -164,7 +220,7 @@ export const UserIdStep: React.FC<UserIdStepProps> = ({
         <div className="flex flex-row gap-1.5 sm:gap-2">
           <div className="relative flex-1">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-300">
-              <User className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isVerified ? 'text-emerald-400' : isValidId ? 'text-cyan-400' : 'text-slate-400'}`} />
+              <User className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isVerified ? 'text-emerald-400' : statusColor === 'red' ? 'text-rose-400' : isValidId ? 'text-cyan-400' : 'text-slate-400'}`} />
             </div>
 
             <input
@@ -178,6 +234,8 @@ export const UserIdStep: React.FC<UserIdStepProps> = ({
               className={`w-full pl-8 sm:pl-10 pr-9 sm:pr-11 py-2 sm:py-3 bg-[#040812] border rounded-xl text-white font-mono text-sm sm:text-base placeholder-slate-400 focus:outline-none transition-all ${
                 isVerified
                   ? 'border-emerald-500/90 ring-2 ring-emerald-500/30 bg-emerald-950/20'
+                  : statusColor === 'red'
+                  ? 'border-rose-500/90 ring-2 ring-rose-500/30 bg-rose-950/20'
                   : isValidId
                   ? 'border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/30'
                   : 'border-slate-800 focus:border-cyan-500'
@@ -197,7 +255,7 @@ export const UserIdStep: React.FC<UserIdStepProps> = ({
             type="button"
             onClick={handleVerifyPlayer}
             disabled={!isValidId || isVerifying}
-            aria-label="Verificar User ID de Blood Strike"
+            aria-label="Verificar User ID de Blood Strike en VothAPI"
             className={`py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl font-['Oswald'] uppercase tracking-wider text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 ${
               isVerified
                 ? 'bg-emerald-950 border border-emerald-500/60 text-emerald-300'
@@ -225,6 +283,40 @@ export const UserIdStep: React.FC<UserIdStepProps> = ({
           </button>
         </div>
 
+        {/* Status ID Element (Official VothAPI target requirement) */}
+        <div
+          id="status-id"
+          role="status"
+          aria-live="polite"
+          className={`font-semibold text-xs sm:text-sm py-1.5 px-3 rounded-xl transition-all flex items-center gap-1.5 ${
+            statusColor === 'green'
+              ? 'text-emerald-400 bg-emerald-950/40 border border-emerald-500/40'
+              : statusColor === 'red'
+              ? 'text-rose-400 bg-rose-950/50 border border-rose-500/60 shadow-[0_0_15px_rgba(244,63,94,0.2)]'
+              : statusColor === 'orange'
+              ? 'text-amber-400 bg-amber-950/40 border border-amber-500/40'
+              : 'text-slate-400 bg-slate-900/40 border border-slate-800/80'
+          }`}
+          style={{
+            color:
+              statusColor === 'green'
+                ? 'green'
+                : statusColor === 'red'
+                ? 'red'
+                : statusColor === 'orange'
+                ? 'orange'
+                : undefined,
+          }}
+        >
+          {statusMessage ? (
+            <span>{statusMessage}</span>
+          ) : (
+            <span className="text-slate-400 text-[11px]">
+              Ingresa tu ID de Blood Strike y pulsa <b>"Verificar"</b> para habilitar el carrito.
+            </span>
+          )}
+        </div>
+
         {/* Validation hint & History */}
         <div className="flex flex-wrap items-center justify-between text-xs text-slate-300 px-1 pt-0.5">
           <span>
@@ -233,10 +325,15 @@ export const UserIdStep: React.FC<UserIdStepProps> = ({
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 inline" />
                 ID verificado correctamente
               </span>
+            ) : statusColor === 'red' ? (
+              <span className="text-rose-400 font-semibold flex items-center gap-1">
+                <AlertTriangle className="w-3.5 h-3.5 text-rose-400 inline" />
+                El carrito permanece bloqueado hasta ingresar un ID válido.
+              </span>
             ) : isValidId ? (
-              <span className="text-cyan-300">Presiona <b>"Verificar ID"</b> para confirmar</span>
+              <span className="text-cyan-300">Presiona <b>"Verificar"</b> para consultar tu cuenta</span>
             ) : playerId.length > 0 ? (
-              <span className="text-amber-300 font-medium">Mínimo 5 dígitos (solo números)</span>
+              <span className="text-amber-300 font-medium">Mínimo 5 dígitos numéricos</span>
             ) : (
               'Ingresa tu ID de Blood Strike'
             )}
@@ -271,28 +368,6 @@ export const UserIdStep: React.FC<UserIdStepProps> = ({
             </div>
           )}
         </div>
-
-        {/* Jugador Encontrado / Nickname Card */}
-        {isVerified && playerNickname && (
-          <div className="p-2.5 sm:p-3 rounded-xl bg-gradient-to-r from-emerald-950/70 via-[#06201a] to-emerald-950/70 border border-emerald-500/50 flex items-center justify-between shadow-lg shadow-emerald-950/40 animate-fadeIn">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm border border-emerald-500/40 shrink-0">
-                <Sparkles className="w-4 h-4 text-emerald-400" />
-              </div>
-              <div>
-                <p className="text-[10px] sm:text-[11px] uppercase font-bold text-emerald-400 tracking-wider flex items-center gap-1">
-                  <span>Jugador Encontrado (Servidores NetEase)</span>
-                </p>
-                <p className="text-xs sm:text-sm font-extrabold text-white font-['Oswald'] tracking-wide">
-                  {playerNickname}
-                </p>
-              </div>
-            </div>
-            <span className="text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded bg-emerald-900/80 border border-emerald-500/50 text-emerald-300 shrink-0 flex items-center gap-1">
-              <CheckCircle2 className="w-3 h-3 text-emerald-400" /> Verificado
-            </span>
-          </div>
-        )}
       </div>
     </section>
   );

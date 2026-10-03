@@ -106,6 +106,24 @@ export function calculateCartTotals(
   };
 }
 
+/**
+ * Obtiene el límite máximo permitido en el carrito para un paquete:
+ * - Pases (Pase Premium, Pase Élite, Pase de Nivel, Bolsa Semanal y Cofre de la Suerte): Límite 1 unidad por pedido
+ * - Oro (Gold): Límite 10 unidades sin importar la cantidad de oro
+ */
+export function getPackageCartLimit(pkg: PackageItem): number {
+  if (
+    pkg.category === 'pass' ||
+    pkg.category === 'special' ||
+    pkg.cardType === 'strikepass' ||
+    pkg.cardType === 'levelup' ||
+    pkg.id.startsWith('pass-')
+  ) {
+    return 1;
+  }
+  return 10;
+}
+
 export const PACKAGES: PackageItem[] = [
   // ORO (GOLD) - NUEVA LISTA DE PRECIOS OFICIAL
   {

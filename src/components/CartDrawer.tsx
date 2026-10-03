@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { CartItem } from '../types';
-import { calculateCartTotals, formatBs, formatUsd } from '../data/packages';
+import { calculateCartTotals, formatBs, formatUsd, getPackageCartLimit } from '../data/packages';
 import { ShoppingCart, X, Plus, Minus, Trash2, ArrowRight, ShieldCheck, Sparkles, Package } from 'lucide-react';
 
 interface CartDrawerProps {
@@ -12,6 +12,8 @@ interface CartDrawerProps {
   onClearCart: () => void;
   appliedCoupon: { code: string; percent: number } | null;
   onProceedToCheckout: () => void;
+  isVerified?: boolean;
+  onToast?: (msg: string, type?: 'success' | 'error' | 'info') => void;
 }
 
 export const CartDrawer: React.FC<CartDrawerProps> = ({
@@ -23,6 +25,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   onClearCart,
   appliedCoupon,
   onProceedToCheckout,
+  isVerified = false,
+  onToast,
 }) => {
   // Lock body scroll when drawer is open
   useEffect(() => {
@@ -161,14 +165,23 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     {/* Item Details */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-1">
-                        <h4 className="font-bold text-xs text-white truncate font-['Oswald'] tracking-wide">
-                          {pkg.name}
-                        </h4>
+                        <div className="flex items-center gap-1.5 truncate">
+                          <h4 className="font-bold text-xs text-white truncate font-['Oswald'] tracking-wide">
+                            {pkg.name}
+                          </h4>
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-bold shrink-0 ${
+                            getPackageCartLimit(pkg) === 1
+                              ? 'bg-purple-950/80 border border-purple-500/40 text-purple-300'
+                              : 'bg-cyan-950/80 border border-cyan-500/40 text-cyan-300'
+                          }`}>
+                            Máx {getPackageCartLimit(pkg)}
+                          </span>
+                        </div>
                         <button
                           type="button"
                           onClick={() => onRemoveItem(pkg.id)}
                           aria-label={`Eliminar ${pkg.name} del carrito`}
-                          className="text-slate-500 hover:text-rose-400 p-1 transition-colors cursor-pointer"
+                          className="text-slate-500 hover:text-rose-400 p-1 transition-colors cursor-pointer shrink-0"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -205,9 +218,24 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
                           <button
                             type="button"
-                            onClick={() => onUpdateQuantity(pkg.id, item.quantity + 1)}
                             aria-label="Aumentar cantidad"
-                            className="w-5 h-5 rounded flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                            disabled={item.quantity >= getPackageCartLimit(pkg)}
+                            onClick={() => {
+                              const limit = getPackageCartLimit(pkg);
+                              if (item.quantity >= limit) {
+                                if (onToast) {
+                                  onToast(limit === 1 ? `Solo se permite 1 unidad de ${pkg.name} por pedido.` : `Límite máximo de 10 unidades de Oro alcanzado.`, 'error');
+                                }
+                                return;
+                              }
+                              onUpdateQuantity(pkg.id, item.quantity + 1);
+                            }}
+                            title={item.quantity >= getPackageCartLimit(pkg) ? `Límite máximo (${getPackageCartLimit(pkg)}) alcanzado` : 'Aumentar cantidad'}
+                            className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${
+                              item.quantity >= getPackageCartLimit(pkg)
+                                ? 'text-slate-600 bg-slate-900 cursor-not-allowed opacity-40'
+                                : 'text-slate-300 hover:text-white hover:bg-slate-800 cursor-pointer'
+                            }`}
                           >
                             <Plus className="w-3 h-3" />
                           </button>
@@ -261,12 +289,24 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               <button
                 type="button"
                 onClick={() => {
+                  if (!isVerified) {
+                    if (onToast) {
+                      onToast('ID Inválido o Error de Token. Verifica tu ID de Blood Strike antes de continuar.', 'error');
+                    }
+                    onClose();
+                    document.getElementById('step-1')?.scrollIntoView({ behavior: 'smooth' });
+                    return;
+                  }
                   onProceedToCheckout();
                   onClose();
                 }}
-                className="w-full py-3 px-4 rounded-xl font-['Oswald'] uppercase tracking-wider text-sm font-bold bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-black shadow-lg shadow-emerald-500/20 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-2"
+                className={`w-full py-3 px-4 rounded-xl font-['Oswald'] uppercase tracking-wider text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-lg cursor-pointer ${
+                  isVerified
+                    ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-black shadow-emerald-500/20 active:scale-[0.99]'
+                    : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40'
+                }`}
               >
-                <span>Proceder al Pago ({totals.itemCount})</span>
+                <span>{isVerified ? `Proceder al Pago (${totals.itemCount})` : '⚠️ Verificar ID de Usuario Primero'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 

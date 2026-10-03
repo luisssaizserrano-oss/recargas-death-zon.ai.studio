@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PackageCategory, PackageItem, CartItem } from '../types';
-import { PACKAGES, calculateEffectivePrice } from '../data/packages';
+import { PACKAGES, calculateEffectivePrice, getPackageCartLimit } from '../data/packages';
 import { Search, Tag, Sparkles, ShoppingCart, Plus, Minus, ArrowRight } from 'lucide-react';
 
 interface PackageGridProps {
@@ -11,6 +11,8 @@ interface PackageGridProps {
   onAddToCart?: (pkg: PackageItem, quantity?: number) => void;
   onUpdateQuantity?: (pkgId: string, quantity: number) => void;
   onOpenCart?: () => void;
+  isVerified?: boolean;
+  onToast?: (msg: string, type?: 'success' | 'error' | 'info') => void;
 }
 
 export const PackageGrid: React.FC<PackageGridProps> = ({
@@ -21,6 +23,8 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
   onAddToCart,
   onUpdateQuantity,
   onOpenCart,
+  isVerified = false,
+  onToast,
 }) => {
   const [activeTab, setActiveTab] = useState<PackageCategory | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -152,6 +156,9 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
   const renderCartAction = (pkg: PackageItem) => {
     const itemInCart = cart.find((c) => c.packageItem.id === pkg.id);
     const quantity = itemInCart ? itemInCart.quantity : 0;
+    const isFirstCard = pkg.id === PACKAGES[0].id;
+    const limit = getPackageCartLimit(pkg);
+    const isAtLimit = quantity >= limit;
 
     if (quantity > 0) {
       return (
@@ -161,9 +168,10 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
         >
           <button
             type="button"
+            disabled={!isVerified}
             onClick={() => onUpdateQuantity && onUpdateQuantity(pkg.id, quantity - 1)}
             aria-label={`Quitar una unidad de ${pkg.name}`}
-            className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-800 hover:bg-slate-700 active:bg-slate-900 text-slate-200 hover:text-white flex items-center justify-center transition-colors cursor-pointer border border-slate-700/80 active:scale-95"
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-800 hover:bg-slate-700 active:bg-slate-900 text-slate-200 hover:text-white flex items-center justify-center transition-colors cursor-pointer border border-slate-700/80 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Minus className="w-3.5 h-3.5" />
           </button>
@@ -172,16 +180,30 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
             <span className="text-xs sm:text-sm font-bold text-cyan-300 font-mono block leading-none">
               {quantity} {quantity === 1 ? 'unidad' : 'unidades'}
             </span>
-            <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider block mt-0.5">
-              En Carrito
+            <span className={`text-[9px] font-bold uppercase tracking-wider block mt-0.5 ${isAtLimit ? 'text-amber-400' : 'text-emerald-400'}`}>
+              {isAtLimit ? `✓ Máx ${limit} ${limit === 1 ? 'alcanzado' : 'alcanzadas'}` : `En Carrito (${quantity}/${limit})`}
             </span>
           </div>
 
           <button
             type="button"
-            onClick={() => onUpdateQuantity && onUpdateQuantity(pkg.id, quantity + 1)}
+            disabled={!isVerified || isAtLimit}
+            onClick={() => {
+              if (isAtLimit) {
+                if (onToast) {
+                  onToast(limit === 1 ? `Solo se permite 1 ${pkg.name} por pedido.` : `Límite máximo de 10 unidades de Oro alcanzado.`, 'error');
+                }
+                return;
+              }
+              if (onUpdateQuantity) onUpdateQuantity(pkg.id, quantity + 1);
+            }}
+            title={isAtLimit ? `Límite máximo alcanzado (máx ${limit})` : `Agregar otra unidad de ${pkg.name}`}
             aria-label={`Agregar otra unidad de ${pkg.name}`}
-            className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-cyan-500 hover:bg-cyan-400 active:bg-cyan-600 text-black font-bold flex items-center justify-center transition-colors cursor-pointer border border-cyan-400 shadow-md shadow-cyan-500/20 active:scale-95"
+            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-colors border active:scale-95 ${
+              isAtLimit
+                ? 'bg-slate-800/50 text-slate-600 border-slate-700/40 cursor-not-allowed opacity-40'
+                : 'bg-cyan-500 hover:bg-cyan-400 active:bg-cyan-600 text-black font-bold cursor-pointer border-cyan-400 shadow-md shadow-cyan-500/20'
+            }`}
           >
             <Plus className="w-3.5 h-3.5" />
           </button>
@@ -196,7 +218,17 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
       >
         <button
           type="button"
+          id={isFirstCard ? 'btn-agregar-carrito' : undefined}
+          data-btn-agregar-carrito="true"
+          disabled={!isVerified}
           onClick={() => {
+            if (!isVerified) {
+              if (onToast) {
+                onToast('ID Inválido o Error de Token. Verifica tu ID primero.', 'error');
+              }
+              document.getElementById('step-1')?.scrollIntoView({ behavior: 'smooth' });
+              return;
+            }
             if (onAddToCart) {
               onAddToCart(pkg, 1);
             } else {
@@ -204,10 +236,14 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
             }
           }}
           aria-label={`Agregar ${pkg.name} al carrito`}
-          className="w-full py-1.5 px-2 rounded-xl text-[11px] sm:text-xs font-['Oswald'] uppercase font-bold tracking-wider bg-slate-800/90 hover:bg-cyan-500 hover:text-black text-cyan-300 border border-cyan-500/40 hover:border-cyan-400 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm group/btn active:scale-95"
+          className={`w-full py-1.5 px-2 rounded-xl text-[11px] sm:text-xs font-['Oswald'] uppercase font-bold tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-sm group/btn active:scale-95 ${
+            isVerified
+              ? 'bg-slate-800/90 hover:bg-cyan-500 hover:text-black text-cyan-300 border border-cyan-500/40 hover:border-cyan-400 cursor-pointer'
+              : 'bg-slate-900/60 text-slate-400 border border-slate-800/80 cursor-not-allowed opacity-60'
+          }`}
         >
-          <ShoppingCart className="w-3.5 h-3.5 text-cyan-400 group-hover/btn:text-black transition-colors" />
-          <span>+ Agregar al Carrito</span>
+          <ShoppingCart className={`w-3.5 h-3.5 ${isVerified ? 'text-cyan-400 group-hover/btn:text-black' : 'text-slate-400'} transition-colors`} />
+          <span>{isVerified ? `+ Agregar (Máx ${limit})` : '🔒 ID Requerido'}</span>
         </button>
       </div>
     );
@@ -220,6 +256,15 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
     const discountPercent = appliedCoupon ? appliedCoupon.percent : 0;
     const priceInfo = calculateEffectivePrice(pkg.priceNumeric, pkg.priceUsd, discountPercent);
 
+    const handleCardClick = () => {
+      if (!isVerified) {
+        if (onToast) onToast('ID Inválido o Error de Token. Verifica tu ID primero.', 'error');
+        document.getElementById('step-1')?.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+      onSelectPackage(pkg);
+    };
+
     if (pkg.category === 'gold' || pkg.cardType === 'gold') {
       return (
         <div
@@ -231,10 +276,10 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
-              onSelectPackage(pkg);
+              handleCardClick();
             }
           }}
-          onClick={() => onSelectPackage(pkg)}
+          onClick={handleCardClick}
           className={`product-card card-gold ${isSelected ? 'card-selected' : ''}`}
         >
           {quantityInCart > 0 ? (
@@ -248,6 +293,7 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
           {renderGoldSvg(pkg.id)}
           <h4 className="gold-qty">{pkg.amountLabel || pkg.name}</h4>
           <span className="badge-bonus">{pkg.bonusBadge || '+BONUS'}</span>
+          <span className="text-[10px] text-cyan-300/80 font-mono tracking-wide mt-0.5 block">Límite: Máx 10</span>
           <div className="price-box">
             {appliedCoupon && (
               <div className="text-[11px] text-slate-300 line-through font-mono mb-0.5">
@@ -273,10 +319,10 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
-              onSelectPackage(pkg);
+              handleCardClick();
             }
           }}
-          onClick={() => onSelectPackage(pkg)}
+          onClick={handleCardClick}
           className={`product-card card-levelup ${isSelected ? 'card-selected' : ''}`}
         >
           {quantityInCart > 0 ? (
@@ -312,6 +358,7 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
             )}
           </div>
           <h4 className="gold-qty">{pkg.name}</h4>
+          <span className="text-[10px] text-purple-300 font-mono font-bold tracking-wide mt-0.5 block">Límite: Máx 1 por cuenta</span>
           <p className="pass-description">{pkg.description}</p>
           <div className="price-box">
             {appliedCoupon && (
@@ -352,10 +399,10 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            onSelectPackage(pkg);
+            handleCardClick();
           }
         }}
-        onClick={() => onSelectPackage(pkg)}
+        onClick={handleCardClick}
         className={`product-card ${cardClass} ${isSelected ? 'card-selected' : ''}`}
       >
         {quantityInCart > 0 ? (
@@ -423,6 +470,7 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
           )}
         </div>
         <h4 className="gold-qty">{pkg.name}</h4>
+        <span className="text-[10px] text-amber-300 font-mono font-bold tracking-wide mt-0.5 block">Límite: Máx 1 por cuenta</span>
         <p className="pass-description">{pkg.description}</p>
         <div className="price-box">
           {appliedCoupon && (
