@@ -2,7 +2,6 @@ import { PackageItem, PaymentInfo, BinancePaymentInfo, PaypalPaymentInfo, CartIt
 import strikePassEliteImg from '../assets/images/strike_pass_elite.webp';
 import strikePassPremiumImg from '../assets/images/strike_pass_premium.webp';
 import levelUpPassImg from '../assets/images/level_up_pass.webp';
-import bsBolsaSemanalImg from '../assets/images/bs_bolsa_semanal.webp';
 import bsUltraChestImg from '../assets/images/bs_ultra_chest.webp';
 
 export const PAYMENT_DETAILS: PaymentInfo = {
@@ -258,22 +257,6 @@ export const PACKAGES: PackageItem[] = [
     passBadge: 'PROGRESO',
     description: 'Consigue hasta 1,200 Gold acumulativos a medida que subes de nivel en tu cuenta.',
     image: levelUpPassImg
-  },
-  {
-    id: 'pass-bolsa-semanal',
-    name: 'Bolsa Semanal',
-    category: 'pass',
-    priceBs: '950,00 Bs',
-    priceNumeric: 950.00,
-    priceUsd: 0.99,
-    discountBadge: '',
-    popular: true,
-    iconType: 'pass',
-    cardType: 'strikepass',
-    amountLabel: 'Bolsa Semanal',
-    passBadge: 'SEMANAL',
-    description: 'Bolsa Semanal de la Suerte con Gold acumulativo y recompensas exclusivas.',
-    image: bsBolsaSemanalImg
   },
   {
     id: 'pass-cofre-ultra-skin',
