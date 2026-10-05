@@ -3,6 +3,7 @@ import strikePassEliteImg from '../assets/images/strike_pass_elite.webp';
 import strikePassPremiumImg from '../assets/images/strike_pass_premium.webp';
 import levelUpPassImg from '../assets/images/level_up_pass.webp';
 import bsUltraChestImg from '../assets/images/bs_ultra_chest.webp';
+import bsSeasonPassImg from '../assets/images/season_pass_exact.svg';
 
 export const PAYMENT_DETAILS: PaymentInfo = {
   bank: 'Banco de Venezuela',
@@ -212,6 +213,22 @@ export const PACKAGES: PackageItem[] = [
   },
 
   // PASES Y ESPECIALES OFICIALES BLOOD STRIKE
+  {
+    id: 'pass-temporada',
+    name: 'Pase de Temporada',
+    category: 'pass',
+    priceBs: '980,00 Bs',
+    priceNumeric: 980.00,
+    priceUsd: 1.12,
+    discountBadge: '',
+    popular: true,
+    iconType: 'pass',
+    cardType: 'strikepass',
+    amountLabel: 'Pase de Temporada',
+    passBadge: 'TEMPORADA',
+    description: 'Pase de Temporada oficial de Blood Strike con recompensas de temporada y oro acumulativo.',
+    image: bsSeasonPassImg
+  },
   {
     id: 'pass-elite-plus',
     name: 'Pase Premium',

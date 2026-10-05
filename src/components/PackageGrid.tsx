@@ -336,18 +336,18 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
           <span className="pass-badge" style={{ background: 'var(--purple-pass)' }}>
             {pkg.passBadge || 'PROGRESO'}
           </span>
-          <div className="pass-icon-container">
+          <div className="w-full max-w-[140px] sm:max-w-[160px] aspect-square h-auto my-1 flex items-center justify-center relative mx-auto">
             {pkg.image ? (
               <img
                 src={pkg.image}
                 alt={pkg.name}
-                width="92"
-                height="92"
+                width="160"
+                height="160"
                 loading="lazy"
                 decoding="async"
                 fetchPriority="low"
                 referrerPolicy="no-referrer"
-                className="w-full h-full object-contain rounded-xl drop-shadow-[0_6px_14px_rgba(157,78,221,0.45)] hover:scale-105 transition-transform duration-300"
+                className="w-full h-full object-contain rounded-2xl drop-shadow-[0_8px_18px_rgba(157,78,221,0.5)] hover:scale-105 transition-transform duration-300"
               />
             ) : (
               <svg viewBox="0 0 100 100" fill="none" className="w-full h-full">
@@ -379,6 +379,7 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
     const isElite = pkg.id === 'pass-elite';
     const isUltraSkin = pkg.passBadge === 'ULTRA SKIN';
     const isWeekly = pkg.passBadge === 'SEMANAL';
+    const isSeasonPass = pkg.id === 'pass-temporada' || pkg.passBadge === 'TEMPORADA';
     const cardClass = isPremium
       ? 'card-strikepass-premium'
       : isElite
@@ -387,6 +388,8 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
       ? 'card-strikepass-ultra'
       : isWeekly
       ? 'card-strikepass-weekly'
+      : isSeasonPass
+      ? 'card-levelup'
       : 'card-strikepass';
 
     return (
@@ -424,32 +427,36 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
               ? { background: 'linear-gradient(90deg, #d946ef, #8b5cf6)', color: '#fff' }
               : isWeekly
               ? { background: 'linear-gradient(90deg, #10b981, #06b6d4)', color: '#000' }
+              : isSeasonPass
+              ? { background: 'linear-gradient(90deg, #a855f7, #c084fc)', color: '#fff' }
               : undefined
           }
         >
           {pkg.passBadge || (isPremium ? 'PREMIUM' : isElite ? 'ELITE' : 'TEMPORADA')}
         </span>
-        <div className="pass-icon-container">
+        <div className={`w-full ${isSeasonPass ? 'max-w-[180px] sm:max-w-[210px] aspect-[320/190]' : 'max-w-[140px] sm:max-w-[160px] aspect-square'} h-auto my-2 flex items-center justify-center relative mx-auto`}>
           {pkg.image ? (
             <img
               src={pkg.image}
               alt={pkg.name}
-              width="92"
-              height="92"
+              width="210"
+              height="125"
               loading="lazy"
               decoding="async"
-              fetchPriority="low"
+              fetchPriority="high"
               referrerPolicy="no-referrer"
-              className={`w-full h-full object-cover rounded-xl transition-transform duration-300 hover:scale-105 ${
+              className={`w-full h-full object-contain rounded-xl transition-transform duration-300 hover:scale-105 ${
                 isPremium
-                  ? 'border border-amber-400/40 drop-shadow-[0_6px_14px_rgba(255,183,3,0.45)]'
+                  ? 'drop-shadow-[0_8px_18px_rgba(255,183,3,0.5)]'
                   : isElite
-                  ? 'border border-cyan-400/40 drop-shadow-[0_6px_14px_rgba(0,210,255,0.45)]'
+                  ? 'drop-shadow-[0_8px_18px_rgba(0,210,255,0.5)]'
                   : isUltraSkin
-                  ? 'border border-fuchsia-400/50 drop-shadow-[0_6px_14px_rgba(217,70,239,0.45)]'
+                  ? 'drop-shadow-[0_8px_18px_rgba(217,70,239,0.5)]'
                   : isWeekly
-                  ? 'border border-emerald-400/50 drop-shadow-[0_6px_14px_rgba(16,185,129,0.45)]'
-                  : 'border border-slate-700/60'
+                  ? 'drop-shadow-[0_8px_18px_rgba(16,185,129,0.5)]'
+                  : isSeasonPass
+                  ? 'drop-shadow-[0_8px_24px_rgba(168,85,247,0.8)]'
+                  : 'drop-shadow-[0_8px_18px_rgba(0,0,0,0.5)]'
               }`}
             />
           ) : (
