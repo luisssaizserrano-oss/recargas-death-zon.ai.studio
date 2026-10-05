@@ -300,7 +300,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
               <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-400">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Pago Móvil, Binance Pay & PayPal con entrega instantánea</span>
+                <span>Pago Móvil en Bolívares con acreditación rápida</span>
               </div>
             </div>
           </>

@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { PackageItem, CartItem } from '../types';
-import { PAYMENT_DETAILS, BINANCE_DETAILS, PAYPAL_DETAILS, WHATSAPP_NUMBER, calculateCartTotals, formatBs, formatUsd } from '../data/packages';
-import { CreditCard, Copy, Check, Building2, Phone, FileText, Hash, AlertCircle, MessageSquareText, ShieldCheck, ArrowRight, Wallet, Mail, UserCheck, HelpCircle, ShoppingCart, Camera, Upload, CheckCircle2, Trash2 } from 'lucide-react';
-
-export type PaymentMethod = 'pagomovil' | 'binance' | 'paypal';
+import { PAYMENT_DETAILS, WHATSAPP_NUMBER, calculateCartTotals, formatBs, formatUsd } from '../data/packages';
+import { CreditCard, Copy, Check, Building2, Phone, FileText, Hash, AlertCircle, MessageSquareText, ShieldCheck, ArrowRight, ShoppingCart, Camera, Upload, CheckCircle2, Trash2 } from 'lucide-react';
 
 interface PagoMovilStepProps {
   playerId: string;
@@ -30,7 +28,6 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
   stepNumber = 3,
   onOpenCart,
 }) => {
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('pagomovil');
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
@@ -71,15 +68,8 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
   };
 
   const copyAllPaymentData = () => {
-    let fullText = '';
-    if (selectedMethod === 'pagomovil') {
-      fullText = `Pago Móvil - Recargas Death Zone\nBanco: ${PAYMENT_DETAILS.bank} (${PAYMENT_DETAILS.bankCode})\nCI: ${PAYMENT_DETAILS.idNumber.replace(/\./g, '')}\nTel: ${PAYMENT_DETAILS.phone}`;
-    } else if (selectedMethod === 'binance') {
-      fullText = `Binance Pay - Recargas Death Zone\nCorreo/Pay ID: ${BINANCE_DETAILS.email}`;
-    } else {
-      fullText = `PayPal - Recargas Death Zone\nCorreo: ${PAYPAL_DETAILS.email}\nNombre: ${PAYPAL_DETAILS.recipientName}`;
-    }
-    copyToClipboard(fullText, `Datos de ${selectedMethod === 'pagomovil' ? 'Pago Móvil' : selectedMethod === 'binance' ? 'Binance' : 'PayPal'}`);
+    const fullText = `Pago Móvil - Recargas Death Zone\nBanco: ${PAYMENT_DETAILS.bank} (${PAYMENT_DETAILS.bankCode})\nCI: ${PAYMENT_DETAILS.idNumber.replace(/\./g, '')}\nTel: ${PAYMENT_DETAILS.phone}`;
+    copyToClipboard(fullText, 'Datos de Pago Móvil');
   };
 
   const effectiveCart: CartItem[] =
@@ -93,11 +83,7 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
   const totals = calculateCartTotals(effectiveCart, discountPercent);
   const hasItems = effectiveCart.length > 0;
 
-  const isRefValid =
-    selectedMethod === 'pagomovil' || selectedMethod === 'binance'
-      ? referenceNumber.trim().length === 6 && /^\d{6}$/.test(referenceNumber.trim())
-      : referenceNumber.trim().length >= 3;
-
+  const isRefValid = referenceNumber.trim().length === 6 && /^\d{6}$/.test(referenceNumber.trim());
   const isCaptureValid = !!(receiptFile || receiptPreview);
   const isFormValid = playerId && hasItems && isRefValid && isCaptureValid;
 
@@ -112,20 +98,9 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
       return;
     }
 
-    if (selectedMethod === 'pagomovil') {
-      const cleanRef = referenceNumber.trim();
-      if (cleanRef.length !== 6 || !/^\d{6}$/.test(cleanRef)) {
-        onToast('El N° de Referencia de Pago Móvil debe ser de exactamente 6 dígitos (ej. 123456)', 'error');
-        return;
-      }
-    } else if (selectedMethod === 'binance') {
-      const cleanRef = referenceNumber.trim();
-      if (cleanRef.length !== 6 || !/^\d{6}$/.test(cleanRef)) {
-        onToast('Ingresa los últimos 6 dígitos de tu Order ID de Binance (ej. 291840)', 'error');
-        return;
-      }
-    } else if (!referenceNumber || referenceNumber.trim().length < 3) {
-      onToast('El N° de Referencia o ID de transacción es OBLIGATORIO', 'error');
+    const cleanRef = referenceNumber.trim();
+    if (cleanRef.length !== 6 || !/^\d{6}$/.test(cleanRef)) {
+      onToast('El N° de Referencia de Pago Móvil debe tener exactamente 6 dígitos (ej. 123456)', 'error');
       return;
     }
 
@@ -133,8 +108,6 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
       onToast('⚠️ Es OBLIGATORIO adjuntar la captura/comprobante de pago antes de continuar', 'error');
       return;
     }
-
-    const methodName = selectedMethod === 'pagomovil' ? 'Pago Móvil' : selectedMethod === 'binance' ? 'Binance Pay' : 'PayPal';
 
     let itemsList = '';
     if (effectiveCart.length === 1 && effectiveCart[0].quantity === 1) {
@@ -158,9 +131,9 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
       `🎮 *Juego:* Blood Strike\n` +
       `🆔 *User ID:* ${playerId.trim()}${isVerified ? ' (Verificado ✓)' : ''}\n` +
       itemsList +
-      `💳 *Método de Pago:* ${methodName}\n` +
+      `💳 *Método de Pago:* Pago Móvil\n` +
       `🔢 *N° Referencia (6 dígitos):* ${referenceNumber.trim()}\n` +
-      `📸 *Capture de Pago:* Adjuntado ✓ (${receiptFile ? receiptFile.name : 'Captura enviada'})\n`;
+      `📸 *Capture de Pago:* Adjuntado ✓ (${receiptFile ? receiptFile.name : 'Captura cargada'})\n`;
 
     if (appliedCoupon) {
       mensaje += `🏷️ *Cupón Aplicado:* ${appliedCoupon.code} (-${appliedCoupon.percent}%)\n`;
@@ -169,7 +142,7 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
       mensaje += `💰 *Monto Total:* ${totals.formattedTotalBs} (Ref: ${totals.formattedTotalUsd})\n`;
     }
 
-    mensaje += `\n📌 *Estado:* Pago realizado por ${methodName}. Se adjunta el capture de pago en el chat de WhatsApp.`;
+    mensaje += `\n📌 *Estado:* Pago realizado por Pago Móvil. Se adjunta el comprobante en el chat de WhatsApp.`;
 
     const encodedText = encodeURIComponent(mensaje);
     const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedText}`;
@@ -187,9 +160,9 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
         </span>
         <div>
           <h2 className="font-['Oswald'] text-sm sm:text-lg uppercase tracking-wider text-white">
-            Métodos de Pago y Confirmación
+            Pago Móvil y Confirmación
           </h2>
-          <p className="text-[11px] sm:text-xs text-slate-300 hidden xs:block">Selecciona tu método de pago y registra tu comprobante</p>
+          <p className="text-[11px] sm:text-xs text-slate-300 hidden xs:block">Realiza tu Pago Móvil y registra tu comprobante</p>
         </div>
       </div>
 
@@ -228,245 +201,89 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
         </div>
       )}
 
-      {/* Payment Method Selector Tabs */}
-      <div className="grid grid-cols-3 gap-1 sm:gap-1.5 p-1 bg-[#040812] border border-slate-700 rounded-xl">
-        <button
-          type="button"
-          onClick={() => {
-            setSelectedMethod('pagomovil');
-            setReferenceNumber('');
-          }}
-          aria-pressed={selectedMethod === 'pagomovil'}
-          aria-label="Pagar con Pago Móvil en Bolívares"
-          className={`py-2 px-2 rounded-lg font-['Oswald'] uppercase text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-1.5 ${
-            selectedMethod === 'pagomovil'
-              ? 'bg-cyan-500 text-black shadow-md shadow-cyan-500/20'
-              : 'text-slate-300 hover:text-white hover:bg-slate-800'
-          }`}
-        >
-          <Building2 className="w-4 h-4 shrink-0" />
-          <span>Pago Móvil</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => {
-            setSelectedMethod('binance');
-            setReferenceNumber('');
-          }}
-          aria-pressed={selectedMethod === 'binance'}
-          aria-label="Pagar con Binance Pay USDT"
-          className={`py-2 px-2 rounded-lg font-['Oswald'] uppercase text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-1.5 ${
-            selectedMethod === 'binance'
-              ? 'bg-amber-400 text-black shadow-md shadow-amber-400/20'
-              : 'text-slate-300 hover:text-white hover:bg-slate-800'
-          }`}
-        >
-          <Wallet className="w-4 h-4 shrink-0" />
-          <span>Binance</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => {
-            setSelectedMethod('paypal');
-            setReferenceNumber('');
-          }}
-          aria-pressed={selectedMethod === 'paypal'}
-          aria-label="Pagar con PayPal USD"
-          className={`py-2 px-2 rounded-lg font-['Oswald'] uppercase text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-1.5 ${
-            selectedMethod === 'paypal'
-              ? 'bg-blue-500 text-white shadow-md shadow-blue-500/20'
-              : 'text-slate-300 hover:text-white hover:bg-slate-800'
-          }`}
-        >
-          <CreditCard className="w-4 h-4 shrink-0" />
-          <span>PayPal</span>
-        </button>
-      </div>
-
-      {/* METHOD DETAILS DISPLAY */}
-
-      {/* 1. PAGO MÓVIL DETAILS */}
-      {selectedMethod === 'pagomovil' && (
-        <div className="space-y-2">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            {/* Banco */}
-            <div 
-              onClick={() => copyToClipboard(`${PAYMENT_DETAILS.bank} (${PAYMENT_DETAILS.bankCode})`, 'Banco')}
-              className="bg-[#040812] border border-slate-700/80 hover:border-cyan-400 p-2.5 rounded-xl cursor-pointer transition-all group flex items-start justify-between"
-            >
-              <div className="space-y-0.5">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-300 flex items-center gap-1">
-                  <Building2 className="w-3 h-3 text-cyan-400" /> Banco
-                </span>
-                <p className="text-xs font-bold text-cyan-200 font-mono group-hover:text-white transition-colors">
-                  {PAYMENT_DETAILS.bank}
-                </p>
-                <span className="text-[10px] text-slate-300 font-mono block">Cod: {PAYMENT_DETAILS.bankCode}</span>
-              </div>
-              <button
-                type="button"
-                aria-label="Copiar datos del banco"
-                className="text-slate-300 group-hover:text-cyan-300 p-0.5"
-              >
-                {copiedField === 'Banco' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              </button>
-            </div>
-
-            {/* Cédula */}
-            <div 
-              onClick={() => copyToClipboard(PAYMENT_DETAILS.idNumber.replace(/\./g, ''), 'Cédula')}
-              className="bg-[#040812] border border-slate-700/80 hover:border-cyan-400 p-2.5 rounded-xl cursor-pointer transition-all group flex items-start justify-between"
-            >
-              <div className="space-y-0.5">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-300 flex items-center gap-1">
-                  <FileText className="w-3 h-3 text-cyan-400" /> Cédula
-                </span>
-                <p className="text-xs font-bold text-cyan-200 font-mono group-hover:text-white transition-colors">
-                  {PAYMENT_DETAILS.idNumber}
-                </p>
-                <span className="text-[10px] text-slate-300 block">V-{PAYMENT_DETAILS.idNumber.replace(/\./g, '')}</span>
-              </div>
-              <button
-                type="button"
-                aria-label="Copiar número de cédula"
-                className="text-slate-300 group-hover:text-cyan-300 p-0.5"
-              >
-                {copiedField === 'Cédula' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              </button>
-            </div>
-
-            {/* Teléfono */}
-            <div 
-              onClick={() => copyToClipboard(PAYMENT_DETAILS.phone.replace(/-/g, ''), 'Teléfono')}
-              className="bg-[#040812] border border-slate-700/80 hover:border-cyan-400 p-2.5 rounded-xl cursor-pointer transition-all group flex items-start justify-between"
-            >
-              <div className="space-y-0.5">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-300 flex items-center gap-1">
-                  <Phone className="w-3 h-3 text-cyan-400" /> Teléfono
-                </span>
-                <p className="text-xs font-bold text-cyan-200 font-mono group-hover:text-white transition-colors">
-                  {PAYMENT_DETAILS.phone}
-                </p>
-                <span className="text-[10px] text-slate-300 font-mono block">{PAYMENT_DETAILS.phone.replace(/-/g, '')}</span>
-              </div>
-              <button
-                type="button"
-                aria-label="Copiar número de teléfono"
-                className="text-slate-300 group-hover:text-cyan-300 p-0.5"
-              >
-                {copiedField === 'Teléfono' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 2. BINANCE PAY DETAILS */}
-      {selectedMethod === 'binance' && (
-        <div className="space-y-2">
+      {/* PAGO MÓVIL DETAILS DISPLAY */}
+      <div className="space-y-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          {/* Banco */}
           <div 
-            onClick={() => copyToClipboard(BINANCE_DETAILS.email, 'Correo Binance')}
-            className="bg-[#040812] border border-amber-500/40 hover:border-amber-400 p-3 rounded-xl cursor-pointer transition-all group flex items-center justify-between"
+            onClick={() => copyToClipboard(`${PAYMENT_DETAILS.bank} (${PAYMENT_DETAILS.bankCode})`, 'Banco')}
+            className="bg-[#040812] border border-slate-700/80 hover:border-cyan-400 p-2.5 rounded-xl cursor-pointer transition-all group flex items-start justify-between"
           >
             <div className="space-y-0.5">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-amber-400 flex items-center gap-1">
-                <Mail className="w-3.5 h-3.5 text-amber-400" /> Correo / Binance Pay ID:
+              <span className="text-[10px] uppercase font-bold tracking-wider text-slate-300 flex items-center gap-1">
+                <Building2 className="w-3 h-3 text-cyan-400" /> Banco
               </span>
-              <p className="text-sm font-bold text-white font-mono group-hover:text-amber-300 transition-colors">
-                {BINANCE_DETAILS.email}
+              <p className="text-xs font-bold text-cyan-200 font-mono group-hover:text-white transition-colors">
+                {PAYMENT_DETAILS.bank}
               </p>
+              <span className="text-[10px] text-slate-300 font-mono block">Cod: {PAYMENT_DETAILS.bankCode}</span>
             </div>
             <button
               type="button"
-              aria-label="Copiar correo de Binance Pay"
-              className="bg-amber-400/10 text-amber-400 group-hover:bg-amber-400 group-hover:text-black p-1.5 rounded-lg transition-colors"
+              aria-label="Copiar datos del banco"
+              className="text-slate-300 group-hover:text-cyan-300 p-0.5"
             >
-              {copiedField === 'Correo Binance' ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+              {copiedField === 'Banco' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
             </button>
           </div>
 
-          {/* Binance Order ID Example Box */}
-          <div className="bg-amber-950/40 border border-amber-500/40 rounded-xl p-2.5 text-xs space-y-1">
-            <p className="text-amber-300 font-bold flex items-center gap-1">
-              <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
-              ¿Cómo colocar el Order ID de Binance?
-            </p>
-            <p className="text-slate-300 text-[11px] leading-relaxed">
-              Ingresar únicamente los <span className="text-amber-300 font-bold underline">últimos 6 dígitos</span> de tu Order ID de Binance.
-            </p>
-            <p className="text-[11px] font-mono text-slate-300 bg-black/50 p-1.5 rounded border border-amber-500/20">
-              Ejemplo: Si tu Order ID es 123456789012345678<span className="text-amber-300 font-bold underline">291840</span>, ingresa: <span className="text-amber-300 font-bold">291840</span>
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* 3. PAYPAL DETAILS */}
-      {selectedMethod === 'paypal' && (
-        <div className="space-y-2">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {/* PayPal Email */}
-            <div 
-              onClick={() => copyToClipboard(PAYPAL_DETAILS.email, 'Correo PayPal')}
-              className="bg-[#040812] border border-blue-500/40 hover:border-blue-400 p-2.5 rounded-xl cursor-pointer transition-all group flex items-start justify-between"
-            >
-              <div className="space-y-0.5">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-blue-400 flex items-center gap-1">
-                  <Mail className="w-3 h-3 text-blue-400" /> Correo PayPal
-                </span>
-                <p className="text-xs font-bold text-white font-mono group-hover:text-blue-300 transition-colors truncate max-w-[180px]">
-                  {PAYPAL_DETAILS.email}
-                </p>
-              </div>
-              <button
-                type="button"
-                aria-label="Copiar correo de PayPal"
-                className="text-slate-300 group-hover:text-blue-300 p-0.5"
-              >
-                {copiedField === 'Correo PayPal' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              </button>
+          {/* Cédula */}
+          <div 
+            onClick={() => copyToClipboard(PAYMENT_DETAILS.idNumber.replace(/\./g, ''), 'Cédula')}
+            className="bg-[#040812] border border-slate-700/80 hover:border-cyan-400 p-2.5 rounded-xl cursor-pointer transition-all group flex items-start justify-between"
+          >
+            <div className="space-y-0.5">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-slate-300 flex items-center gap-1">
+                <FileText className="w-3 h-3 text-cyan-400" /> Cédula
+              </span>
+              <p className="text-xs font-bold text-cyan-200 font-mono group-hover:text-white transition-colors">
+                {PAYMENT_DETAILS.idNumber}
+              </p>
+              <span className="text-[10px] text-slate-300 block">V-{PAYMENT_DETAILS.idNumber.replace(/\./g, '')}</span>
             </div>
-
-            {/* PayPal Recipient Name */}
-            <div 
-              onClick={() => copyToClipboard(PAYPAL_DETAILS.recipientName, 'Nombre PayPal')}
-              className="bg-[#040812] border border-blue-500/40 hover:border-blue-400 p-2.5 rounded-xl cursor-pointer transition-all group flex items-start justify-between"
+            <button
+              type="button"
+              aria-label="Copiar número de cédula"
+              className="text-slate-300 group-hover:text-cyan-300 p-0.5"
             >
-              <div className="space-y-0.5">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-blue-300 flex items-center gap-1 font-semibold">
-                  <UserCheck className="w-3 h-3 text-blue-400" /> Titular de Cuenta
-                </span>
-                <p className="text-xs font-bold text-white font-mono group-hover:text-blue-200 transition-colors">
-                  {PAYPAL_DETAILS.recipientName}
-                </p>
-              </div>
-              <button
-                type="button"
-                aria-label="Copiar titular de cuenta PayPal"
-                className="text-slate-300 group-hover:text-blue-300 p-0.5"
-              >
-                {copiedField === 'Nombre PayPal' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              </button>
-            </div>
+              {copiedField === 'Cédula' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+            </button>
           </div>
 
-          <p className="text-[11px] text-blue-200 bg-blue-950/60 p-2 rounded-lg border border-blue-500/40">
-            💡 Envía el monto equivalente en USD ({totals.formattedTotalUsd}) a nuestra cuenta PayPal e ingresa tu ID de transacción.
-          </p>
+          {/* Teléfono */}
+          <div 
+            onClick={() => copyToClipboard(PAYMENT_DETAILS.phone.replace(/-/g, ''), 'Teléfono')}
+            className="bg-[#040812] border border-slate-700/80 hover:border-cyan-400 p-2.5 rounded-xl cursor-pointer transition-all group flex items-start justify-between"
+          >
+            <div className="space-y-0.5">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-slate-300 flex items-center gap-1">
+                <Phone className="w-3 h-3 text-cyan-400" /> Teléfono
+              </span>
+              <p className="text-xs font-bold text-cyan-200 font-mono group-hover:text-white transition-colors">
+                {PAYMENT_DETAILS.phone}
+              </p>
+              <span className="text-[10px] text-slate-300 font-mono block">{PAYMENT_DETAILS.phone.replace(/-/g, '')}</span>
+            </div>
+            <button
+              type="button"
+              aria-label="Copiar número de teléfono"
+              className="text-slate-300 group-hover:text-cyan-300 p-0.5"
+            >
+              {copiedField === 'Teléfono' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+            </button>
+          </div>
         </div>
-      )}
+      </div>
 
       {/* Copy All Data Button */}
       <button
         type="button"
         onClick={copyAllPaymentData}
-        aria-label={`Copiar todos los datos de pago de ${selectedMethod === 'pagomovil' ? 'Pago Móvil' : selectedMethod === 'binance' ? 'Binance' : 'PayPal'}`}
+        aria-label="Copiar todos los datos de Pago Móvil"
         className="w-full bg-[#040812] hover:bg-cyan-500 hover:text-black border border-cyan-500/30 hover:border-cyan-400 text-slate-200 font-['Oswald'] uppercase tracking-wider text-xs py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-2 group shadow-md"
       >
         <CreditCard className="w-3.5 h-3.5 text-cyan-400 group-hover:text-black transition-colors" />
-        <span>Copiar datos de {selectedMethod === 'pagomovil' ? 'Pago Móvil' : selectedMethod === 'binance' ? 'Binance' : 'PayPal'}</span>
+        <span>Copiar datos de Pago Móvil</span>
       </button>
 
       {/* Reference Input */}
@@ -477,9 +294,7 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
         >
           <span className="flex items-center gap-1.5 text-cyan-300">
             <Hash className="w-3.5 h-3.5 text-cyan-400" />
-            {selectedMethod === 'pagomovil' && 'N° de Referencia Pago Móvil (6 dígitos)'}
-            {selectedMethod === 'binance' && 'Últimos 6 dígitos Order ID Binance'}
-            {selectedMethod === 'paypal' && 'N° Transacción / ID PayPal'}
+            N° de Referencia Pago Móvil (6 dígitos)
           </span>
           <span className="text-[10px] font-bold text-amber-400 bg-amber-950/80 border border-amber-500/40 px-2 py-0.5 rounded-md flex items-center gap-1">
             <AlertCircle className="w-3 h-3 text-amber-400" />
@@ -491,21 +306,9 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
           type="text"
           id="ref-input"
           value={referenceNumber}
-          onChange={(e) => {
-            if (selectedMethod === 'pagomovil' || selectedMethod === 'binance') {
-              setReferenceNumber(e.target.value.replace(/\D/g, '').slice(0, 6));
-            } else {
-              setReferenceNumber(e.target.value);
-            }
-          }}
-          placeholder={
-            selectedMethod === 'pagomovil'
-              ? 'Ej. 123456 (exactamente 6 dígitos)'
-              : selectedMethod === 'binance'
-              ? 'Ej. 291840 (exactamente 6 dígitos)'
-              : 'Ej. 9AB12345CD67890'
-          }
-          maxLength={selectedMethod === 'pagomovil' || selectedMethod === 'binance' ? 6 : 20}
+          onChange={(e) => setReferenceNumber(e.target.value.replace(/\D/g, '').slice(0, 6))}
+          placeholder="Ej. 123456 (exactamente 6 dígitos)"
+          maxLength={6}
           required
           className={`w-full px-3 py-2 bg-[#040812] border rounded-xl text-white font-mono text-xs placeholder-slate-500 focus:outline-none transition-colors ${
             isRefValid 
@@ -513,7 +316,7 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
               : 'border-slate-800 focus:border-amber-500'
           }`}
         />
-        {selectedMethod === 'pagomovil' && referenceNumber.length > 0 && referenceNumber.length < 6 && (
+        {referenceNumber.length > 0 && referenceNumber.length < 6 && (
           <p className="text-[10px] text-amber-400 font-medium mt-1">
             Faltan {6 - referenceNumber.length} dígitos (debe tener exactamente 6 dígitos)
           </p>
@@ -547,7 +350,7 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-xs">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>Captura Cárgada Correctamente</span>
+                  <span>Captura Cargada Correctamente</span>
                 </div>
                 <p className="text-[11px] text-slate-300 truncate font-mono">
                   {receiptFile ? receiptFile.name : 'comprobante_pago.png'}
@@ -599,7 +402,7 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
             Instrucción Obligatoria:
           </p>
           <p className="leading-snug text-[11px]">
-            Asegúrate de haber ingresado tu <span className="underline font-bold text-white">referencia de 6 dígitos</span> y subido tu <span className="underline font-bold text-white">capture de pago</span> para habilitar el envío por WhatsApp.
+            Ingresa tu <span className="underline font-bold text-white">referencia de 6 dígitos</span> y sube tu <span className="underline font-bold text-white">capture de pago</span> para habilitar el envío del pedido por WhatsApp.
           </p>
         </div>
       </div>
