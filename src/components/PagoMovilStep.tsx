@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { PackageItem, CartItem } from '../types';
-import { PAYMENT_DETAILS, WHATSAPP_NUMBER, calculateCartTotals, formatBs, formatUsd } from '../data/packages';
-import { CreditCard, Copy, Check, Building2, Phone, FileText, Hash, AlertCircle, MessageSquareText, ShieldCheck, ArrowRight, ShoppingCart, Camera, Upload, CheckCircle2, Trash2 } from 'lucide-react';
+import { PAYMENT_DETAILS, calculateCartTotals } from '../data/packages';
+import { CreditCard, Copy, Check, Building2, Phone, FileText, Hash, AlertCircle, ShieldCheck, ArrowRight, ShoppingCart, Camera, Upload, CheckCircle2, Trash2 } from 'lucide-react';
 
 interface PagoMovilStepProps {
   playerId: string;
@@ -18,7 +18,6 @@ interface PagoMovilStepProps {
 
 export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
   playerId,
-  isVerified = false,
   selectedPackage,
   cart = [],
   referenceNumber,
@@ -84,72 +83,6 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
   const hasItems = effectiveCart.length > 0;
 
   const isRefValid = referenceNumber.trim().length === 6 && /^\d{6}$/.test(referenceNumber.trim());
-  const isCaptureValid = !!(receiptFile || receiptPreview);
-  const isFormValid = playerId && hasItems && isRefValid && isCaptureValid;
-
-  const handleWhatsAppCheckout = () => {
-    if (!playerId || playerId.trim().length < 5) {
-      onToast('Por favor ingresa tu ID de usuario de Blood Strike (Paso 1)', 'error');
-      return;
-    }
-
-    if (!hasItems) {
-      onToast('Por favor selecciona al menos un paquete de recarga (Paso 2)', 'error');
-      return;
-    }
-
-    const cleanRef = referenceNumber.trim();
-    if (cleanRef.length !== 6 || !/^\d{6}$/.test(cleanRef)) {
-      onToast('El N° de Referencia de Pago Móvil debe tener exactamente 6 dígitos (ej. 123456)', 'error');
-      return;
-    }
-
-    if (!receiptFile && !receiptPreview) {
-      onToast('⚠️ Es OBLIGATORIO adjuntar la captura/comprobante de pago antes de continuar', 'error');
-      return;
-    }
-
-    let itemsList = '';
-    if (effectiveCart.length === 1 && effectiveCart[0].quantity === 1) {
-      itemsList = `📦 *Producto:* ${effectiveCart[0].packageItem.name}\n`;
-    } else {
-      itemsList =
-        `🛒 *DETALLE DEL PEDIDO (${totals.itemCount} unidades):*\n` +
-        effectiveCart
-          .map(
-            (item) =>
-              `• ${item.quantity}x ${item.packageItem.name} - ${formatBs(
-                item.packageItem.priceNumeric * item.quantity
-              )} (Ref: ${formatUsd(item.packageItem.priceUsd * item.quantity)})`
-          )
-          .join('\n') +
-        `\n━━━━━━━━━━━━━━━━━━━━\n📦 *Total Artículos:* ${totals.itemCount} unidades\n`;
-    }
-
-    let mensaje = 
-      `⚡ *NUEVA RECARGA - DEATH ZONE* ⚡\n\n` +
-      `🎮 *Juego:* Blood Strike\n` +
-      `🆔 *User ID:* ${playerId.trim()}${isVerified ? ' (Verificado ✓)' : ''}\n` +
-      itemsList +
-      `💳 *Método de Pago:* Pago Móvil\n` +
-      `🔢 *N° Referencia (6 dígitos):* ${referenceNumber.trim()}\n` +
-      `📸 *Capture de Pago:* Adjuntado ✓ (${receiptFile ? receiptFile.name : 'Captura cargada'})\n`;
-
-    if (appliedCoupon) {
-      mensaje += `🏷️ *Cupón Aplicado:* ${appliedCoupon.code} (-${appliedCoupon.percent}%)\n`;
-      mensaje += `💵 *Monto Total:* ${totals.formattedTotalBs} (Ref: ${totals.formattedTotalUsd})\n`;
-    } else {
-      mensaje += `💰 *Monto Total:* ${totals.formattedTotalBs} (Ref: ${totals.formattedTotalUsd})\n`;
-    }
-
-    mensaje += `\n📌 *Estado:* Pago realizado por Pago Móvil. Se adjunta el comprobante en el chat de WhatsApp.`;
-
-    const encodedText = encodeURIComponent(mensaje);
-    const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedText}`;
-
-    window.open(whatsappUrl, '_blank');
-    onToast('Redirigiendo a WhatsApp... ¡Recuerda adjuntar la imagen de tu captura!', 'success');
-  };
 
   return (
     <section id={`step-${stepNumber}`} className="bg-[#09111f]/90 backdrop-blur-md border border-cyan-500/20 rounded-2xl p-3 sm:p-5 shadow-2xl space-y-3 sm:space-y-4 scroll-mt-20">
@@ -160,9 +93,9 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
         </span>
         <div>
           <h2 className="font-['Oswald'] text-sm sm:text-lg uppercase tracking-wider text-white">
-            Pago Móvil y Confirmación
+            Pago Móvil y Datos de Pago
           </h2>
-          <p className="text-[11px] sm:text-xs text-slate-300 hidden xs:block">Realiza tu Pago Móvil y registra tu comprobante</p>
+          <p className="text-[11px] sm:text-xs text-slate-300 hidden xs:block">Realiza tu Pago Móvil e ingresa tu número de referencia</p>
         </div>
       </div>
 
@@ -323,7 +256,7 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
         )}
       </div>
 
-      {/* CAPTURA DE PAGO (COMPROBANTE) - OBLIGATORIO */}
+      {/* CAPTURA DE PAGO (COMPROBANTE) */}
       <div className="pt-1">
         <label 
           htmlFor="receipt-upload" 
@@ -331,11 +264,10 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
         >
           <span className="flex items-center gap-1.5 text-cyan-300">
             <Camera className="w-3.5 h-3.5 text-cyan-400" />
-            Captura de Pago (Comprobante)
+            Captura de Pago (Opcional)
           </span>
-          <span className="text-[10px] font-bold text-amber-400 bg-amber-950/80 border border-amber-500/40 px-2 py-0.5 rounded-md flex items-center gap-1">
-            <AlertCircle className="w-3 h-3 text-amber-400" />
-            Obligatorio
+          <span className="text-[10px] text-slate-400 font-medium">
+            Foto del comprobante
           </span>
         </label>
 
@@ -350,7 +282,7 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-xs">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>Captura Cargada Correctamente</span>
+                  <span>Captura Cargada</span>
                 </div>
                 <p className="text-[11px] text-slate-300 truncate font-mono">
                   {receiptFile ? receiptFile.name : 'comprobante_pago.png'}
@@ -372,16 +304,16 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
         ) : (
           <label
             htmlFor="receipt-upload"
-            className="flex flex-col items-center justify-center p-3.5 bg-[#040812] hover:bg-[#060e1f] border-2 border-dashed border-amber-500/50 hover:border-cyan-400 rounded-xl cursor-pointer transition-all text-center space-y-1.5 group"
+            className="flex flex-col items-center justify-center p-3 bg-[#040812] hover:bg-[#060e1f] border border-dashed border-slate-700/80 hover:border-cyan-400 rounded-xl cursor-pointer transition-all text-center space-y-1 group"
           >
-            <div className="w-9 h-9 rounded-full bg-amber-500/10 group-hover:bg-cyan-500/10 border border-amber-500/30 group-hover:border-cyan-500/40 flex items-center justify-center text-amber-400 group-hover:text-cyan-300 transition-colors">
-              <Upload className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-full bg-slate-800/80 group-hover:bg-cyan-500/10 border border-slate-700 group-hover:border-cyan-500/40 flex items-center justify-center text-slate-300 group-hover:text-cyan-300 transition-colors">
+              <Upload className="w-3.5 h-3.5" />
             </div>
             <div>
-              <p className="text-xs font-bold text-slate-200 group-hover:text-cyan-300 transition-colors">
-                Haz clic aquí para subir el Capture / Comprobante
+              <p className="text-xs font-medium text-slate-300 group-hover:text-cyan-300 transition-colors">
+                Adjuntar captura de tu comprobante
               </p>
-              <p className="text-[10px] text-slate-400">Adjunta la foto o captura de tu pago en PNG, JPG o WEBP</p>
+              <p className="text-[10px] text-slate-300">Imagen PNG, JPG o WEBP</p>
             </div>
             <input
               type="file"
@@ -392,42 +324,6 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
             />
           </label>
         )}
-      </div>
-
-      {/* MANDATORY INSTRUCTION BANNER BEFORE WHATSAPP BUTTON */}
-      <div className="bg-amber-950/40 border border-amber-500/50 rounded-xl p-2.5 flex items-start gap-2 text-amber-200 text-xs">
-        <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-        <div className="space-y-0.5">
-          <p className="font-bold text-amber-300 uppercase tracking-wide text-[11px]">
-            Instrucción Obligatoria:
-          </p>
-          <p className="leading-snug text-[11px]">
-            Ingresa tu <span className="underline font-bold text-white">referencia de 6 dígitos</span> y sube tu <span className="underline font-bold text-white">capture de pago</span> para habilitar el envío del pedido por WhatsApp.
-          </p>
-        </div>
-      </div>
-
-      {/* Main WhatsApp Button */}
-      <button
-        type="button"
-        onClick={handleWhatsAppCheckout}
-        disabled={!isFormValid}
-        aria-label="Enviar comprobante de pago por WhatsApp"
-        className={`w-full py-3 px-4 rounded-xl font-['Oswald'] uppercase tracking-wider text-sm font-bold transition-all flex items-center justify-center gap-2.5 shadow-xl ${
-          isFormValid
-            ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/30 active:scale-[0.99] cursor-pointer'
-            : 'bg-slate-800 text-slate-300 border border-slate-700/60 cursor-not-allowed opacity-80'
-        }`}
-      >
-        <MessageSquareText className="w-5 h-5" />
-        <span>Enviar Comprobante por WhatsApp</span>
-        <ArrowRight className="w-4 h-4 ml-auto opacity-70" />
-      </button>
-
-      {/* Guarantee Note */}
-      <div className="flex items-center justify-center gap-2 text-[10px] text-slate-300 pt-0.5">
-        <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-        <span>Atención rápida e inmediata por soporte de WhatsApp</span>
       </div>
     </section>
   );

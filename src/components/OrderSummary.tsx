@@ -52,8 +52,8 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
       return;
     }
 
-    if (!referenceNumber || referenceNumber.trim().length < 3) {
-      if (onToast) onToast('El N° de Referencia es OBLIGATORIO (Paso 3)', 'error');
+    if (referenceNumber.trim().length !== 6 || !/^\d{6}$/.test(referenceNumber.trim())) {
+      if (onToast) onToast('El N° de Referencia de Pago Móvil debe tener exactamente 6 dígitos (Paso 3)', 'error');
       document.getElementById('step-3')?.scrollIntoView({ behavior: 'smooth' });
       return;
     }
@@ -80,7 +80,8 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
       `🎮 *Juego:* Blood Strike\n` +
       `🆔 *User ID:* ${playerId.trim()}${isVerified ? ' (Verificado ✓)' : ''}\n` +
       itemsList +
-      `🔢 *N° Referencia / ID:* ${referenceNumber.trim()}\n`;
+      `💳 *Método de Pago:* Pago Móvil\n` +
+      `🔢 *N° Referencia Pago Móvil (6 dígitos):* ${referenceNumber.trim()}\n`;
 
     if (appliedCoupon) {
       mensaje += `🏷️ *Cupón Aplicado:* ${appliedCoupon.code} (-${appliedCoupon.percent}%)\n`;
