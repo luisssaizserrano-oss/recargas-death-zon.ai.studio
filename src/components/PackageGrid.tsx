@@ -290,18 +290,22 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
           ) : isSelected ? (
             <div className="selected-check-badge">✓</div>
           ) : null}
-          {renderGoldSvg(pkg.id)}
-          <h4 className="gold-qty">{pkg.amountLabel || pkg.name}</h4>
-          <span className="badge-bonus">{pkg.bonusBadge || '+BONUS'}</span>
-          <span className="text-[10px] text-cyan-300/80 font-mono tracking-wide mt-0.5 block">Límite: Máx 10</span>
-          <div className="price-box">
+          <div className="w-full h-20 sm:h-24 flex items-center justify-center my-0.5 shrink-0">
+            {renderGoldSvg(pkg.id)}
+          </div>
+          <h4 className="text-sm font-extrabold text-white text-center line-clamp-1 tracking-tight">{pkg.amountLabel || pkg.name}</h4>
+          <span className="text-[10px] font-mono font-bold text-amber-300 my-0.5 block">{pkg.bonusBadge || '+BONUS ORO'}</span>
+          <p className="text-[10px] text-slate-400 line-clamp-1 h-4 my-0.5 text-center">
+            {pkg.description || 'Entrega inmediata ID'}
+          </p>
+          <div className="price-box mt-auto pt-1.5 border-t border-white/5 w-full flex flex-col items-center">
             {appliedCoupon && (
-              <div className="text-[11px] text-slate-300 line-through font-mono mb-0.5">
+              <div className="text-[10px] text-slate-400 line-through font-mono">
                 {priceInfo.originalFormattedBs}
               </div>
             )}
-            <div className="bs-price">{priceInfo.formattedBs}</div>
-            <div className="usd-ref">Ref: {priceInfo.formattedUsd}</div>
+            <div className="text-xs sm:text-sm font-black text-amber-400 font-mono">{priceInfo.formattedBs}</div>
+            <div className="text-[10px] text-slate-400 font-mono">Ref: {priceInfo.formattedUsd}</div>
           </div>
           {renderCartAction(pkg)}
         </div>
@@ -336,38 +340,38 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
           <span className="pass-badge" style={{ background: 'var(--purple-pass)' }}>
             {pkg.passBadge || 'PROGRESO'}
           </span>
-          <div className="w-full max-w-[140px] sm:max-w-[160px] aspect-square h-auto my-1 flex items-center justify-center relative mx-auto">
+          <div className="w-full h-20 sm:h-24 flex items-center justify-center my-0.5 shrink-0">
             {pkg.image ? (
               <img
                 src={pkg.image}
                 alt={pkg.name}
-                width="160"
-                height="160"
+                width="140"
+                height="95"
                 loading="lazy"
                 decoding="async"
                 fetchPriority="low"
                 referrerPolicy="no-referrer"
-                className="w-full h-full object-contain rounded-2xl drop-shadow-[0_8px_18px_rgba(157,78,221,0.5)] hover:scale-105 transition-transform duration-300"
+                className="max-h-full max-w-[150px] sm:max-w-[170px] object-contain rounded-lg drop-shadow-[0_4px_12px_rgba(157,78,221,0.5)] hover:scale-105 transition-transform duration-300"
               />
             ) : (
-              <svg viewBox="0 0 100 100" fill="none" className="w-full h-full">
+              <svg viewBox="0 0 100 100" fill="none" className="w-full h-full max-h-20">
                 <rect x="20" y="20" width="60" height="60" rx="12" fill="#9D4EDD" opacity="0.2" stroke="#9D4EDD" strokeWidth="3" />
                 <path d="M35 65 L50 35 L65 65 L55 65 L50 50 L45 65 Z" fill="#C77DFF" />
                 <path d="M50 25 L65 45 L35 45 Z" fill="#E0AAFF" />
               </svg>
             )}
           </div>
-          <h4 className="gold-qty">{pkg.name}</h4>
-          <span className="text-[10px] text-purple-300 font-mono font-bold tracking-wide mt-0.5 block">Límite: Máx 1 por cuenta</span>
-          <p className="pass-description">{pkg.description}</p>
-          <div className="price-box">
+          <h4 className="text-sm font-extrabold text-white text-center line-clamp-1 tracking-tight">{pkg.name}</h4>
+          <span className="text-[10px] text-purple-300 font-mono font-bold my-0.5 block">Máx 1 por cuenta</span>
+          <p className="text-[10px] text-slate-400 line-clamp-1 h-4 my-0.5 text-center">{pkg.description}</p>
+          <div className="price-box mt-auto pt-1.5 border-t border-white/5 w-full flex flex-col items-center">
             {appliedCoupon && (
-              <div className="text-[11px] text-slate-300 line-through font-mono mb-0.5">
+              <div className="text-[10px] text-slate-400 line-through font-mono">
                 {priceInfo.originalFormattedBs}
               </div>
             )}
-            <div className="bs-price">{priceInfo.formattedBs}</div>
-            <div className="usd-ref">Ref: {priceInfo.formattedUsd}</div>
+            <div className="text-xs sm:text-sm font-black text-amber-400 font-mono">{priceInfo.formattedBs}</div>
+            <div className="text-[10px] text-slate-400 font-mono">Ref: {priceInfo.formattedUsd}</div>
           </div>
           {renderCartAction(pkg)}
         </div>
@@ -434,33 +438,33 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
         >
           {pkg.passBadge || (isPremium ? 'PREMIUM' : isElite ? 'ELITE' : 'TEMPORADA')}
         </span>
-        <div className={`w-full ${isSeasonPass ? 'max-w-[180px] sm:max-w-[210px] aspect-[320/190]' : 'max-w-[140px] sm:max-w-[160px] aspect-square'} h-auto my-2 flex items-center justify-center relative mx-auto`}>
+        <div className="w-full h-20 sm:h-24 flex items-center justify-center my-0.5 shrink-0">
           {pkg.image ? (
             <img
               src={pkg.image}
               alt={pkg.name}
-              width="210"
-              height="125"
+              width="150"
+              height="95"
               loading="lazy"
               decoding="async"
               fetchPriority="high"
               referrerPolicy="no-referrer"
-              className={`w-full h-full object-contain rounded-xl transition-transform duration-300 hover:scale-105 ${
+              className={`max-h-full max-w-[150px] sm:max-w-[170px] object-contain rounded-lg transition-transform duration-300 hover:scale-105 ${
                 isPremium
-                  ? 'drop-shadow-[0_8px_18px_rgba(255,183,3,0.5)]'
+                  ? 'drop-shadow-[0_4px_12px_rgba(255,183,3,0.5)]'
                   : isElite
-                  ? 'drop-shadow-[0_8px_18px_rgba(0,210,255,0.5)]'
+                  ? 'drop-shadow-[0_4px_12px_rgba(0,210,255,0.5)]'
                   : isUltraSkin
-                  ? 'drop-shadow-[0_8px_18px_rgba(217,70,239,0.5)]'
+                  ? 'drop-shadow-[0_4px_12px_rgba(217,70,239,0.5)]'
                   : isWeekly
-                  ? 'drop-shadow-[0_8px_18px_rgba(16,185,129,0.5)]'
+                  ? 'drop-shadow-[0_4px_12px_rgba(16,185,129,0.5)]'
                   : isSeasonPass
-                  ? 'drop-shadow-[0_8px_24px_rgba(168,85,247,0.8)]'
-                  : 'drop-shadow-[0_8px_18px_rgba(0,0,0,0.5)]'
+                  ? 'drop-shadow-[0_4px_16px_rgba(168,85,247,0.75)]'
+                  : 'drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)]'
               }`}
             />
           ) : (
-            <svg viewBox="0 0 100 100" fill="none" className="w-full h-full">
+            <svg viewBox="0 0 100 100" fill="none" className="w-full h-full max-h-20">
               <polygon
                 points="50,10 90,30 90,70 50,90 10,70 10,30"
                 fill="#FF2A5F"
@@ -476,17 +480,17 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
             </svg>
           )}
         </div>
-        <h4 className="gold-qty">{pkg.name}</h4>
-        <span className="text-[10px] text-amber-300 font-mono font-bold tracking-wide mt-0.5 block">Límite: Máx 1 por cuenta</span>
-        <p className="pass-description">{pkg.description}</p>
-        <div className="price-box">
+        <h4 className="text-sm font-extrabold text-white text-center line-clamp-1 tracking-tight">{pkg.name}</h4>
+        <span className="text-[10px] text-amber-300 font-mono font-bold my-0.5 block">Máx 1 por cuenta</span>
+        <p className="text-[10px] text-slate-400 line-clamp-1 h-4 my-0.5 text-center">{pkg.description}</p>
+        <div className="price-box mt-auto pt-1.5 border-t border-white/5 w-full flex flex-col items-center">
           {appliedCoupon && (
-            <div className="text-[11px] text-slate-300 line-through font-mono mb-0.5">
+            <div className="text-[10px] text-slate-400 line-through font-mono">
               {priceInfo.originalFormattedBs}
             </div>
           )}
-          <div className="bs-price">{priceInfo.formattedBs}</div>
-          <div className="usd-ref">Ref: {priceInfo.formattedUsd}</div>
+          <div className="text-xs sm:text-sm font-black text-amber-400 font-mono">{priceInfo.formattedBs}</div>
+          <div className="text-[10px] text-slate-400 font-mono">Ref: {priceInfo.formattedUsd}</div>
         </div>
         {renderCartAction(pkg)}
       </div>
