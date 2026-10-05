@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { PackageItem, CartItem } from '../types';
 import { PAYMENT_DETAILS, BINANCE_DETAILS, PAYPAL_DETAILS, WHATSAPP_NUMBER, calculateCartTotals, formatBs, formatUsd } from '../data/packages';
-import { CreditCard, Copy, Check, Building2, Phone, FileText, Hash, AlertCircle, MessageSquareText, ShieldCheck, ArrowRight, Wallet, Mail, UserCheck, HelpCircle, ShoppingCart } from 'lucide-react';
+import { CreditCard, Copy, Check, Building2, Phone, FileText, Hash, AlertCircle, MessageSquareText, ShieldCheck, ArrowRight, Wallet, Mail, UserCheck, HelpCircle, ShoppingCart, Camera, Upload, CheckCircle2, Trash2 } from 'lucide-react';
 
 export type PaymentMethod = 'pagomovil' | 'binance' | 'paypal';
 
@@ -32,6 +32,21 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
 }) => {
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('pagomovil');
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setReceiptFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setReceiptPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      onToast('Captura de pago cargada correctamente', 'success');
+    }
+  };
 
   const copyToClipboard = (text: string, label: string) => {
     if (navigator.clipboard && window.isSecureContext) {
@@ -78,6 +93,14 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
   const totals = calculateCartTotals(effectiveCart, discountPercent);
   const hasItems = effectiveCart.length > 0;
 
+  const isRefValid =
+    selectedMethod === 'pagomovil' || selectedMethod === 'binance'
+      ? referenceNumber.trim().length === 6 && /^\d{6}$/.test(referenceNumber.trim())
+      : referenceNumber.trim().length >= 3;
+
+  const isCaptureValid = !!(receiptFile || receiptPreview);
+  const isFormValid = playerId && hasItems && isRefValid && isCaptureValid;
+
   const handleWhatsAppCheckout = () => {
     if (!playerId || playerId.trim().length < 5) {
       onToast('Por favor ingresa tu ID de usuario de Blood Strike (Paso 1)', 'error');
@@ -89,8 +112,25 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
       return;
     }
 
-    if (!referenceNumber || referenceNumber.trim().length < 3) {
-      onToast('El N° de Referencia o comprobante es OBLIGATORIO', 'error');
+    if (selectedMethod === 'pagomovil') {
+      const cleanRef = referenceNumber.trim();
+      if (cleanRef.length !== 6 || !/^\d{6}$/.test(cleanRef)) {
+        onToast('El N° de Referencia de Pago Móvil debe ser de exactamente 6 dígitos (ej. 123456)', 'error');
+        return;
+      }
+    } else if (selectedMethod === 'binance') {
+      const cleanRef = referenceNumber.trim();
+      if (cleanRef.length !== 6 || !/^\d{6}$/.test(cleanRef)) {
+        onToast('Ingresa los últimos 6 dígitos de tu Order ID de Binance (ej. 291840)', 'error');
+        return;
+      }
+    } else if (!referenceNumber || referenceNumber.trim().length < 3) {
+      onToast('El N° de Referencia o ID de transacción es OBLIGATORIO', 'error');
+      return;
+    }
+
+    if (!receiptFile && !receiptPreview) {
+      onToast('⚠️ Es OBLIGATORIO adjuntar la captura/comprobante de pago antes de continuar', 'error');
       return;
     }
 
@@ -119,7 +159,8 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
       `🆔 *User ID:* ${playerId.trim()}${isVerified ? ' (Verificado ✓)' : ''}\n` +
       itemsList +
       `💳 *Método de Pago:* ${methodName}\n` +
-      `🔢 *N° Referencia / ID:* ${referenceNumber.trim()}\n`;
+      `🔢 *N° Referencia (6 dígitos):* ${referenceNumber.trim()}\n` +
+      `📸 *Capture de Pago:* Adjuntado ✓ (${receiptFile ? receiptFile.name : 'Captura enviada'})\n`;
 
     if (appliedCoupon) {
       mensaje += `🏷️ *Cupón Aplicado:* ${appliedCoupon.code} (-${appliedCoupon.percent}%)\n`;
@@ -128,13 +169,13 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
       mensaje += `💰 *Monto Total:* ${totals.formattedTotalBs} (Ref: ${totals.formattedTotalUsd})\n`;
     }
 
-    mensaje += `\n📌 *Estado:* Pago realizado por ${methodName}. Listo para verificación y entrega.`;
+    mensaje += `\n📌 *Estado:* Pago realizado por ${methodName}. Se adjunta el capture de pago en el chat de WhatsApp.`;
 
     const encodedText = encodeURIComponent(mensaje);
     const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedText}`;
 
     window.open(whatsappUrl, '_blank');
-    onToast('Redirigiendo a WhatsApp...', 'success');
+    onToast('Redirigiendo a WhatsApp... ¡Recuerda adjuntar la imagen de tu captura!', 'success');
   };
 
   return (
@@ -436,13 +477,13 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
         >
           <span className="flex items-center gap-1.5 text-cyan-300">
             <Hash className="w-3.5 h-3.5 text-cyan-400" />
-            {selectedMethod === 'pagomovil' && 'N° de Referencia Pago Móvil'}
+            {selectedMethod === 'pagomovil' && 'N° de Referencia Pago Móvil (6 dígitos)'}
             {selectedMethod === 'binance' && 'Últimos 6 dígitos Order ID Binance'}
             {selectedMethod === 'paypal' && 'N° Transacción / ID PayPal'}
           </span>
           <span className="text-[10px] font-bold text-amber-400 bg-amber-950/80 border border-amber-500/40 px-2 py-0.5 rounded-md flex items-center gap-1">
             <AlertCircle className="w-3 h-3 text-amber-400" />
-            Obligatorio
+            6 dígitos
           </span>
         </label>
         
@@ -450,22 +491,104 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
           type="text"
           id="ref-input"
           value={referenceNumber}
-          onChange={(e) => setReferenceNumber(e.target.value)}
+          onChange={(e) => {
+            if (selectedMethod === 'pagomovil' || selectedMethod === 'binance') {
+              setReferenceNumber(e.target.value.replace(/\D/g, '').slice(0, 6));
+            } else {
+              setReferenceNumber(e.target.value);
+            }
+          }}
           placeholder={
             selectedMethod === 'pagomovil'
-              ? 'Ingresa N° de transferencia...'
+              ? 'Ej. 123456 (exactamente 6 dígitos)'
               : selectedMethod === 'binance'
-              ? 'Ej. 291840 (6 dígitos)'
+              ? 'Ej. 291840 (exactamente 6 dígitos)'
               : 'Ej. 9AB12345CD67890'
           }
-          maxLength={selectedMethod === 'binance' ? 8 : 20}
+          maxLength={selectedMethod === 'pagomovil' || selectedMethod === 'binance' ? 6 : 20}
           required
           className={`w-full px-3 py-2 bg-[#040812] border rounded-xl text-white font-mono text-xs placeholder-slate-500 focus:outline-none transition-colors ${
-            referenceNumber.trim().length >= 3 
+            isRefValid 
               ? 'border-emerald-500/80 focus:border-emerald-400' 
               : 'border-slate-800 focus:border-amber-500'
           }`}
         />
+        {selectedMethod === 'pagomovil' && referenceNumber.length > 0 && referenceNumber.length < 6 && (
+          <p className="text-[10px] text-amber-400 font-medium mt-1">
+            Faltan {6 - referenceNumber.length} dígitos (debe tener exactamente 6 dígitos)
+          </p>
+        )}
+      </div>
+
+      {/* CAPTURA DE PAGO (COMPROBANTE) - OBLIGATORIO */}
+      <div className="pt-1">
+        <label 
+          htmlFor="receipt-upload" 
+          className="block text-xs font-semibold text-slate-200 uppercase tracking-wider mb-1 flex items-center justify-between"
+        >
+          <span className="flex items-center gap-1.5 text-cyan-300">
+            <Camera className="w-3.5 h-3.5 text-cyan-400" />
+            Captura de Pago (Comprobante)
+          </span>
+          <span className="text-[10px] font-bold text-amber-400 bg-amber-950/80 border border-amber-500/40 px-2 py-0.5 rounded-md flex items-center gap-1">
+            <AlertCircle className="w-3 h-3 text-amber-400" />
+            Obligatorio
+          </span>
+        </label>
+
+        {receiptPreview ? (
+          <div className="relative bg-[#040812] border border-emerald-500/60 rounded-xl p-3 flex items-center justify-between gap-3 shadow-md shadow-emerald-500/10">
+            <div className="flex items-center gap-3 overflow-hidden">
+              <img 
+                src={receiptPreview} 
+                alt="Captura de Pago" 
+                className="w-12 h-12 object-cover rounded-lg border border-emerald-500/40 shrink-0" 
+              />
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-xs">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Captura Cárgada Correctamente</span>
+                </div>
+                <p className="text-[11px] text-slate-300 truncate font-mono">
+                  {receiptFile ? receiptFile.name : 'comprobante_pago.png'}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setReceiptFile(null);
+                setReceiptPreview(null);
+              }}
+              className="p-2 text-rose-400 hover:text-rose-300 hover:bg-rose-950/50 rounded-lg transition-colors shrink-0"
+              title="Quitar captura"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          <label
+            htmlFor="receipt-upload"
+            className="flex flex-col items-center justify-center p-3.5 bg-[#040812] hover:bg-[#060e1f] border-2 border-dashed border-amber-500/50 hover:border-cyan-400 rounded-xl cursor-pointer transition-all text-center space-y-1.5 group"
+          >
+            <div className="w-9 h-9 rounded-full bg-amber-500/10 group-hover:bg-cyan-500/10 border border-amber-500/30 group-hover:border-cyan-500/40 flex items-center justify-center text-amber-400 group-hover:text-cyan-300 transition-colors">
+              <Upload className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-200 group-hover:text-cyan-300 transition-colors">
+                Haz clic aquí para subir el Capture / Comprobante
+              </p>
+              <p className="text-[10px] text-slate-400">Adjunta la foto o captura de tu pago en PNG, JPG o WEBP</p>
+            </div>
+            <input
+              type="file"
+              id="receipt-upload"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </label>
+        )}
       </div>
 
       {/* MANDATORY INSTRUCTION BANNER BEFORE WHATSAPP BUTTON */}
@@ -473,10 +596,10 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
         <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
         <div className="space-y-0.5">
           <p className="font-bold text-amber-300 uppercase tracking-wide text-[11px]">
-            Paso Final Obligatorio:
+            Instrucción Obligatoria:
           </p>
           <p className="leading-snug text-[11px]">
-            Después de concretar tu pago por {selectedMethod === 'pagomovil' ? 'Pago Móvil' : selectedMethod === 'binance' ? 'Binance' : 'PayPal'}, haz clic en el botón de WhatsApp abajo para enviar tu comprobante de forma <span className="underline font-bold text-white">obligatoria</span>.
+            Asegúrate de haber ingresado tu <span className="underline font-bold text-white">referencia de 6 dígitos</span> y subido tu <span className="underline font-bold text-white">capture de pago</span> para habilitar el envío por WhatsApp.
           </p>
         </div>
       </div>
@@ -485,10 +608,10 @@ export const PagoMovilStep: React.FC<PagoMovilStepProps> = ({
       <button
         type="button"
         onClick={handleWhatsAppCheckout}
-        disabled={!playerId || !hasItems || !referenceNumber.trim()}
+        disabled={!isFormValid}
         aria-label="Enviar comprobante de pago por WhatsApp"
         className={`w-full py-3 px-4 rounded-xl font-['Oswald'] uppercase tracking-wider text-sm font-bold transition-all flex items-center justify-center gap-2.5 shadow-xl ${
-          playerId && hasItems && referenceNumber.trim()
+          isFormValid
             ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/30 active:scale-[0.99] cursor-pointer'
             : 'bg-slate-800 text-slate-300 border border-slate-700/60 cursor-not-allowed opacity-80'
         }`}
