@@ -245,8 +245,8 @@ export const PACKAGES: PackageItem[] = [
     image: levelUpPassImg
   },
   {
-    id: 'pass-elite-plus',
-    name: 'Pase Premium',
+    id: 'pass-elite',
+    name: 'Pase Élite',
     category: 'pass',
     priceBs: '3.825,00 Bs',
     priceNumeric: 3825.00,
@@ -255,25 +255,26 @@ export const PACKAGES: PackageItem[] = [
     popular: true,
     iconType: 'pass',
     cardType: 'strikepass',
-    amountLabel: 'Strike Pass Premium',
-    passBadge: 'PREMIUM',
-    description: 'Pase Elite completo + subida instantánea de niveles y recompensas exclusivas.',
-    image: strikePassPremiumImg
+    amountLabel: 'Strike Pass Elite',
+    passBadge: 'ELITE',
+    description: 'Desbloquea Skins de Striker Exclusivas, Armas Legendarias y Oro de la Temporada.',
+    image: strikePassEliteImg
   },
   {
-    id: 'pass-elite',
-    name: 'Pase Élite',
+    id: 'pass-elite-plus',
+    name: 'Pase Premium',
     category: 'pass',
     priceBs: '8.685,00 Bs',
     priceNumeric: 8685.00,
     priceUsd: 9.65,
     discountBadge: '',
+    popular: true,
     iconType: 'pass',
     cardType: 'strikepass',
-    amountLabel: 'Strike Pass Elite',
-    passBadge: 'ELITE',
-    description: 'Desbloquea Skins de Striker Exclusivas, Armas Legendarias y Oro de la Temporada.',
-    image: strikePassEliteImg
+    amountLabel: 'Strike Pass Premium',
+    passBadge: 'PREMIUM',
+    description: 'Pase Elite completo + subida instantánea de niveles y recompensas exclusivas.',
+    image: strikePassPremiumImg
   },
   {
     id: 'pass-cofre-ultra-skin',
