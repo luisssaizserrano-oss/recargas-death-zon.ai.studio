@@ -382,7 +382,7 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
     const isPremium = pkg.id.includes('plus') || pkg.id.includes('premium');
     const isElite = pkg.id === 'pass-elite';
     const isUltraSkin = pkg.passBadge === 'ULTRA SKIN';
-    const isWeekly = pkg.passBadge === 'SEMANAL';
+    const isWeekly = pkg.passBadge === 'SEMANAL' || pkg.id.includes('bolsa');
     const isSeasonPass = pkg.id === 'pass-temporada' || pkg.passBadge === 'TEMPORADA';
     const cardClass = isPremium
       ? 'card-strikepass-premium'

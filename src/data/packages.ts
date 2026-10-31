@@ -4,6 +4,7 @@ import strikePassPremiumImg from '../assets/images/strike_pass_premium.webp';
 import levelUpPassImg from '../assets/images/level_up_pass.webp';
 import bsUltraChestImg from '../assets/images/bs_ultra_chest.webp';
 import bsSeasonPassImg from '../assets/images/season_pass_exact.svg';
+import bsBolsaSuerteImg from '../assets/images/bs_bolsa_suerte.webp';
 
 export const PAYMENT_DETAILS: PaymentInfo = {
   bank: 'Banco de Venezuela',
@@ -228,6 +229,22 @@ export const PACKAGES: PackageItem[] = [
     passBadge: 'TEMPORADA',
     description: 'Pase de Temporada oficial de Blood Strike con recompensas de temporada y oro acumulativo.',
     image: bsSeasonPassImg
+  },
+  {
+    id: 'pass-bolsa-suerte',
+    name: 'Bolsa de la Suerte',
+    category: 'pass',
+    priceBs: '1.170,00 Bs',
+    priceNumeric: 1170.00,
+    priceUsd: 1.30,
+    discountBadge: '',
+    popular: true,
+    iconType: 'pass',
+    cardType: 'strikepass',
+    amountLabel: 'Bolsa de la Suerte',
+    passBadge: 'NUEVA',
+    description: 'Nueva Bolsa de la Suerte Blood Strike con recompensas exclusivas.',
+    image: bsBolsaSuerteImg
   },
   {
     id: 'pass-mejora',

@@ -235,6 +235,11 @@
   box-shadow: 0 0 28px rgba(157, 78, 221, 0.45);
   background: rgba(28, 22, 44, 0.95);
 }
+.card-strikepass-weekly.card-selected {
+  border-color: #10b981;
+  box-shadow: 0 0 28px rgba(16, 185, 129, 0.45);
+  background: rgba(16, 36, 30, 0.95);
+}
 
 .selected-check-badge {
   position: absolute;
