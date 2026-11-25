@@ -29,7 +29,7 @@ export default function App() {
         if (saved) {
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            // Clampear cantidades con los límites oficiales (máx 1 en pases/cofres, máx 10 en oro)
+            // Clampear cantidades con los límites oficiales (máx 1 en pases, máx 2 en cofres, máx 10 en oro)
             return parsed.map((item: CartItem) => {
               const maxLimit = getPackageCartLimit(item.packageItem);
               return {
@@ -102,6 +102,8 @@ export default function App() {
     if (existing && existing.quantity >= limit) {
       if (limit === 1) {
         showToast(`Ya tienes "${pkg.name}" en el carrito (límite máximo: 1 por pedido)`, 'info');
+      } else if (limit < 10) {
+        showToast(`Ya tienes el límite máximo (${limit} unidades por cuenta) de "${pkg.name}"`, 'info');
       } else {
         showToast(`Ya tienes el límite máximo (${limit} unidades) de "${pkg.name}"`, 'info');
       }
@@ -137,6 +139,8 @@ export default function App() {
     if (currentQty >= limit) {
       if (limit === 1) {
         showToast(`⚠️ Límite alcanzado: solo se permite 1 ${pkg.name} por pedido.`, 'error');
+      } else if (limit < 10) {
+        showToast(`⚠️ Límite alcanzado: máximo ${limit} unidades de ${pkg.name} por cuenta.`, 'error');
       } else {
         showToast(`⚠️ Límite alcanzado: máximo ${limit} unidades de Oro por pedido.`, 'error');
       }
@@ -177,6 +181,8 @@ export default function App() {
       if (quantity > limit) {
         if (limit === 1) {
           showToast(`⚠️ Límite alcanzado: solo se permite 1 unidad de ${targetItem.packageItem.name} por pedido.`, 'error');
+        } else if (limit < 10) {
+          showToast(`⚠️ Límite alcanzado: máximo ${limit} unidades de ${targetItem.packageItem.name} por cuenta.`, 'error');
         } else {
           showToast(`⚠️ Límite alcanzado: máximo ${limit} unidades de este paquete de Oro por pedido.`, 'error');
         }

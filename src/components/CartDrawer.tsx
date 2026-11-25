@@ -170,7 +170,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                             {pkg.name}
                           </h4>
                           <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-bold shrink-0 ${
-                            getPackageCartLimit(pkg) === 1
+                            getPackageCartLimit(pkg) < 10
                               ? 'bg-purple-950/80 border border-purple-500/40 text-purple-300'
                               : 'bg-cyan-950/80 border border-cyan-500/40 text-cyan-300'
                           }`}>
@@ -224,7 +224,14 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                               const limit = getPackageCartLimit(pkg);
                               if (item.quantity >= limit) {
                                 if (onToast) {
-                                  onToast(limit === 1 ? `Solo se permite 1 unidad de ${pkg.name} por pedido.` : `Límite máximo de 10 unidades de Oro alcanzado.`, 'error');
+                                  onToast(
+                                    limit === 1
+                                      ? `Solo se permite 1 unidad de ${pkg.name} por pedido.`
+                                      : limit < 10
+                                      ? `Límite máximo de ${limit} unidades de ${pkg.name} por cuenta alcanzado.`
+                                      : `Límite máximo de ${limit} unidades de Oro alcanzado.`,
+                                    'error'
+                                  );
                                 }
                                 return;
                               }

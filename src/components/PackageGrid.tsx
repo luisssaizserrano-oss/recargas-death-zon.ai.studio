@@ -191,7 +191,14 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
             onClick={() => {
               if (isAtLimit) {
                 if (onToast) {
-                  onToast(limit === 1 ? `Solo se permite 1 ${pkg.name} por pedido.` : `Límite máximo de 10 unidades de Oro alcanzado.`, 'error');
+                  onToast(
+                    limit === 1
+                      ? `Solo se permite 1 ${pkg.name} por pedido.`
+                      : limit < 10
+                      ? `Límite máximo de ${limit} unidades de ${pkg.name} por cuenta alcanzado.`
+                      : `Límite máximo de ${limit} unidades de Oro alcanzado.`,
+                    'error'
+                  );
                 }
                 return;
               }
@@ -481,7 +488,7 @@ export const PackageGrid: React.FC<PackageGridProps> = ({
           )}
         </div>
         <h4 className="text-sm font-extrabold text-white text-center line-clamp-1 tracking-tight">{pkg.name}</h4>
-        <span className="text-[10px] text-amber-300 font-mono font-bold my-0.5 block">Máx 1 por cuenta</span>
+        <span className="text-[10px] text-amber-300 font-mono font-bold my-0.5 block">Máx {getPackageCartLimit(pkg)} por cuenta</span>
         <p className="text-[10px] text-slate-400 line-clamp-1 h-4 my-0.5 text-center">{pkg.description}</p>
         <div className="price-box mt-auto pt-1.5 border-t border-white/5 w-full flex flex-col items-center">
           {appliedCoupon && (
